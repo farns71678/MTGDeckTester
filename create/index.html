@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MTG Deck Tester - Create a new Standard deck</title>
+
+    <link href="./create/styles.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="./create/app.js" defer></script>
+  </head>
+  <body>
+    <nav>
+      <div id="nav-title">MTG Deck Tester</div>
+      <div id="link-container">
+        <a href="/">HOME</a>
+        <a href="/create">CREATE</a>
+        <a href="/decks">DECKS</a>
+      </div>
+    </nav>
+
+    <!--main section-->
+    <div id="main-section">
+      <!--info section-->
+      <div id="info-section">
+        <h2 id="info-title">DECK INFO</h2>
+        <form id="info-form" onsubmit="event.preventDefault();">
+          <input
+            type="text"
+            class="info-input"
+            id="deck-name-input"
+            placeholder="Deck name"
+          />
+          <br />
+          <div id="color-label">Colors:</div>
+
+          <!--format select-->
+          <select
+            id="format-option"
+            placeholder="format"
+            class="info-input"
+          ></select>
+          <textarea
+            name=""
+            id="description-input"
+            cols="30"
+            rows="8"
+            class="info-input"
+            placeholder="Description"
+          ></textarea>
+        </form>
+      </div>
+
+      <!--display section-->
+      <div id="display-section">
+        <!-- this is all test html-->
+        <div id="card-display-container">
+          <div id="display-flex">
+            
+          </div>
+        </div>
+      </div>
+
+      <!--search section-->
+      <div id="search-section">
+        <h2>CARD SEARCH</h2>
+        <form id="search-form">
+          <input
+            type="text"
+            class="info-input"
+            id="search-input"
+            placeholder="Scryfall Search"
+          />
+          <div id="search-err"></div>
+        </form>
+        <!--<div id="search-results"></div>-->
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MTG Deck Tester</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: sans-serif;
+      }
+
+      body {
+        background-color: #111;
+        color: white;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10vh;
+        background-image: url("https://th.bing.com/th/id/R.4975b89590384018f9aba7925849693f?rik=SsCj0paOR5T2NA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f7%2fd%2f5%2f562405.jpg&ehk=Cs%2fxXoPIDMfVXZ54o8IvS75wnR6NU2GtcK7VAzrpgG4%3d&risl=&pid=ImgRaw&r=0");
+        background-size: cover;
+        background-position: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #text-container {
+        margin-top: 2.4vh;
+        background-color: rgba(2, 2, 2, 0.5);
+        padding: 60px 40px;
+        border-radius: 15px;
+        height: 45vh;
+      }
+
+      #create-deck {
+        margin-top: 3vh;
+        background-color: #23b02a; /* #26ce31 */
+        color: white;
+        font-size: 3.5vh;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s ease-in-out;
+      }
+
+      #create-deck:hover {
+        color: #444;
+        background-color: #1e9c24; /* #1e9c24 */
+        box-shadow: 0 0 10px #19921f; /* #19921f */
+        transform: translateY(1px);
+      }
+
+      h1 {
+        font-size: 7vh;
+      }
+
+      p {
+        text-align: center;
+        font-size: 3.2vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="picture-section">
+      <div id="text-container" class="container">
+        <h1>MTG Deck Tester</h1>
+        <br />
+        <p>Test your decks against current MTG standard decks.</p>
+        <br />
+        <button id="create-deck">Start Now</button>
+      </div>
+    </div>
+
+    <script>
+      const createDeck = document.getElementById("create-deck");
+      createDeck.addEventListener("click", () => {
+        window.location.href = "/create";
+      });
+    </script>
+  </body>
+</html>
