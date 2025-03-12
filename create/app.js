@@ -24,35 +24,25 @@ $("#search-form").submit(function (event) {
 
   $.ajax({
     url:
-      "../cards/search?unique=cards&q=name%3A%2F.%2" +
-      searchInput +
-      ".%2%2F&order=released",
+      "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" + searchInput + ".*/&order=released",
     type: "GET",
-    dataType: "application/json",
     success: function (cards) {
       if (cards.object == "list" && cards.total_cards > 0) {
         $(".search-card").remove();
         cards.data.forEach((card) => {
-          if (
-            card.object == "card" &&
-            card.image_uris != undefined &&
-            card.image_uris.png != undefined &&
-            card.image_uris.png != null
-          ) {
+          if (card.object == "card" && card.image_uris != undefined && card.image_uris.png != undefined && card.image_uris.png != null ) {
             /*$("#search-results").append(
               "<div class='search-card'>" + card.name + "</div>",
             );*/
-            let card = $(
-              "<img src='" +
-                pathToSelf(card.image_uris.png) +
-                "' class='search-card'>",
-            );
-            $("#search-section").append(card);
-            $("#search-section").append("<br />");
+            let cardEl = $("<img src='" + pathToSelf(card.image_uris.png) + "' class='search-card'>");
 
-            card.on("click", function (event) {
+            cardEl.on("click", function (event) {
               event.preventDefault();
             });
+
+            
+            $("#search-section").append(cardEl);
+            $("#search-section").append("<br />");
           }
         });
       } else {
@@ -61,9 +51,7 @@ $("#search-form").submit(function (event) {
     },
     error: function (err) {
       console.log(err);
-      $("#search-err").html(
-        "There was an error with your request." + err.responseText,
-      );
+      $("#search-err").html("There was an error with your request: " + err.responseText);
     },
   });
 });
