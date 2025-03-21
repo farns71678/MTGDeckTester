@@ -1,6 +1,6 @@
 const express = require("express");
 const proxy = require("express-http-proxy");
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware } = require("http-proxy-middleware");
 const url = require("url");
 const app = express();
 const port = 3000;
@@ -28,6 +28,9 @@ app.get("/decks", (req, res) => {
   res.send("My decks");
 });
 
+app.get("/images/*", (req, res) => {
+  res.sendFile(__dirname + req.path);
+});
 
 const scryfallImageProxy = proxy("https://cards.scryfall.io/", {
   proxyReqPathResolver: (req) => url.parse(req.baseUrl).path,
@@ -39,23 +42,24 @@ const scryfallSearchProxy = proxy("https://api.scryfall.com/", {
 });
 
 app.use("/png/*", scryfallImageProxy);
+app.use("/normal/*", scryfallImageProxy);
 
-//app.use("/cards/search", scryfallSearchProxy);
+app.use("/cards/search", scryfallSearchProxy);
 
 app.use(
   "/search",
   createProxyMiddleware({
-      target: "https://api.scryfall.com/cards/search",
-      changeOrigin: true,
-      pathRewrite: {
-          "^/search": "",
+    target: "https://api.scryfall.com/cards/search",
+    changeOrigin: true,
+    pathRewrite: {
+      "^/search": "",
+    },
+    on: {
+      proxyReq: (proxyReq, req, res) => {
+        console.log("https://api.scryfall.com" + proxyReq.path);
       },
-      on: {
-        proxyReq: (proxyReq, req, res) => {
-          console.log("https://api.scryfall.com" + proxyReq.path);
-        }
-      }
-  })
+    },
+  }),
 );
 
 app.listen(port, () => {

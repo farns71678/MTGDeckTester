@@ -7,6 +7,10 @@
     <title>MTG Deck Tester - Create a new Standard deck</title>
 
     <link href="./create/styles.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="./create/app.js" defer></script>
@@ -25,7 +29,10 @@
     <div id="main-section">
       <!--info section-->
       <div id="info-section">
-        <h2 id="info-title">DECK INFO</h2>
+        <div id="info-header">
+          <h2 id="info-title">DECK INFO</h2>
+          <div id="info-collapse-btn"><i class="fa fa-bars"></i></div>
+        </div>
         <form id="info-form" onsubmit="event.preventDefault();">
           <input
             type="text"
@@ -34,14 +41,21 @@
             placeholder="Deck name"
           />
           <br />
-          <div id="color-label">Colors:</div>
+          <div id="color-label"></div>
 
           <!--format select-->
-          <select
-            id="format-option"
-            placeholder="format"
-            class="info-input"
-          ></select>
+          <div id="format-count-container">
+            <select
+              id="format-option"
+              placeholder="format"
+              class="info-input"
+            ></select>
+            <div id="count-info-container">
+              <span id="card-count-info">45</span>
+              /
+              <span id="count-max-info">60</span>
+            </div>
+          </div>
           <textarea
             name=""
             id="description-input"
@@ -51,6 +65,15 @@
             placeholder="Description"
           ></textarea>
         </form>
+        <div id="collapsed-info" class="hidden">
+          <div id="color-collapsed-info"></div>
+          <div id="format-collapsed-info"></div>
+          <div id="card-count-collapsed-info">
+            <div id="collapsed-count-info">5</div>
+            <hr />
+            <div id="collapsed-count-max-info">60</div>
+          </div>
+        </div>
       </div>
 
       <!--display section-->
@@ -58,7 +81,78 @@
         <!-- this is all test html-->
         <div id="card-display-container">
           <div id="display-flex">
-            
+            <div id="display-column-left" class="display-column">
+              <div
+                id="creature-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">CREATURES</h1>
+                <div
+                  class="card-container"
+                  data-count="4"
+                  data-name="Aurelia, the Warleader"
+                  data-scryfall="https://api.scryfall.com/cards/bc6ffc1c-575b-4116-83c9-d13b29886c35"
+                >
+                  <div class="card-count-column">
+                    <div class="card-count">
+                      &times;<span class="count-span">4</span>
+                    </div>
+                    <div class="card-count-add card-count-btn">&plus;</div>
+                    <div class="card-count-remove card-count-btn">&minus;</div>
+                  </div>
+                  <img
+                    src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066"
+                    class="card-image"
+                  />
+                </div>
+              </div>
+
+              <div
+                id="planeswalker-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">PLANESWALKERS</h1>
+              </div>
+            </div>
+
+            <div id="display-column-center" class="display-column">
+              <div
+                id="artifact-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">ARTIFACTS</h1>
+              </div>
+
+              <div
+                id="enchantment-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">ENCHANTMENTS</h1>
+              </div>
+
+              <div
+                id="instant-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">INSTANTS</h1>
+              </div>
+            </div>
+
+            <div id="display-column-right" class="display-column">
+              <div
+                id="sorcery-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">SORCERYS</h1>
+              </div>
+
+              <div
+                id="land-display-container"
+                class="card-type-container clearfix"
+              >
+                <h1 class="card-type-title">LANDS</h1>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -76,6 +170,28 @@
           <div id="search-err"></div>
         </form>
         <!--<div id="search-results"></div>-->
+      </div>
+    </div>
+
+    <!--modal section-->
+    <div id="modal-section" class="hidden">
+      <div id="card-viewer-container" class="hidden">
+        <div class="card-viewer-count-row">
+          <div class="card-viewer-input-label">CARD COUNT:</div>
+          <input
+            type="number"
+            class="card-viewer-count-input"
+            value="4"
+            min="0"
+          />
+          <div class="card-viewer-spacer">II</div>
+          <div class="card-viewer-close-btn">&times;</div>
+        </div>
+        <img
+          src="https://cards.scryfall.io/png/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.png?1730491066"
+          alt="Aurelia, the Warleader"
+          class="card-viewer-image"
+        />
       </div>
     </div>
   </body>
