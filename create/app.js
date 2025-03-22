@@ -4,16 +4,16 @@ let cardContainer = document.querySelector(
 );
 let searchBar = document.getElementById("search-input");
 let formats = [
-  "standard",
-  "modern",
-  "legacy",
-  "pauper",
-  "vintage",
-  "brawl",
-  "commander",
-  "duel",
-  "pioneer",
-  "penny",
+  {name: "standard", singleton: false},
+  {name: "modern", singleton: false},
+  {name: "legacy", singleton: false},
+  {name: "pauper", singleton: false},
+  {name: "vintage", singleton: false},
+  {name: "brawl", singleton: false},
+  {name: "commander", singleton: true},
+  {name: "duel", singleton: false},
+  {name: "pioneer", singleton: false},
+  {name: "penny", singleton: false},
 ];
 let loadedCards = [
   {
@@ -153,7 +153,9 @@ let loadedCards = [
 
 let deckColors = [];
 let colorData = new Map();
+let numberStringMap = new Map();
 let deckSize = 0;
+let currentFormat = formats[0];
 
 colorData.set("W", { name: "white", symbol: "{W}", order: 0 });
 colorData.set("U", { name: "blue", symbol: "{U}", order: 1 });
@@ -162,8 +164,13 @@ colorData.set("R", { name: "red", symbol: "{R}", order: 3 });
 colorData.set("G", { name: "green", symbol: "{G}", order: 4 });
 colorData.set("C", { name: "colorless", symbol: "{C}", order: 5 });
 
+const numberStrings = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+for (let i = 0; i < numberStrings.length; i++) {
+  numberStringMap.set(numberStrings[i], i);
+}
+
 formats.forEach((format) => {
-  formatOption.innerHTML += `<option name="${format}">${format.charAt(0).toUpperCase() + format.slice(1)}</option>`;
+  formatOption.innerHTML += `<option name="${format.name}">${format.name.charAt(0).toUpperCase() + format.name.slice(1)}</option>`;
 });
 $("#format-collapsed-info").html($("#format-option").val().toUpperCase());
 refreshDeckColors();
@@ -186,8 +193,8 @@ $("#search-form").submit(function (event) {
   $(".search-card").remove();
   let searchUrl =
     searchInput[0] == "\\"
-      ? "../search?unique=cards&q=" + searchInput.substr(1) + "&order=released"
-      : "../search?unique=cards&q=name:/.*" +
+      ? "https://api.scryfall.com/cards/search?unique=cards&q=" + searchInput.substr(1) + "&order=released"
+      : "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" +
         searchInput +
         ".*/&order=released";
 
@@ -237,10 +244,8 @@ $("#search-form").submit(function (event) {
                 );
                 if (foundCard != null && foundCard != undefined) {
                   foundCard.count = card.count;
-                  console.log("card found");
                 } else {
                   loadedCards.push(card);
-                  console.log("card not found");
                 }
                 let cardAdded =
                   $(`<div class="card-container" data-count="4" data-name="${card.name}" data-scryfall="${card.uri}">
@@ -344,7 +349,9 @@ $(document).ready(() => {
 
   $("#format-option").on("change", (event) => {
     event.preventDefault();
+    let format = formats.find(item => item.name == $(event.target).val().toLowerCase());
     $("#format-collapsed-info").html($(event.target).val().toUpperCase());
+    refreshDeckFormat();
   });
 
   $("#info-collapse-btn>i").on("click", (event) => {
@@ -459,6 +466,9 @@ $(document).on("keydown", (event) => {
   }
 });
 
+/**
+ * Refreshes deck colors (mainly for UI) based off card out. If no color is present, it will use the colorless mana symbol. 
+ */
 function refreshDeckColors() {
   deckColors = [];
   $(".card-container").each((i, obj) => {
@@ -488,8 +498,10 @@ function refreshDeckColors() {
   });
 }
 
+/**
+ * Refreshes the card count based off of the cards out and the format. 
+ */
 function refreshDeckCardCount() {
-  console.log(loadedCards);
   let total = 0;
   loadedCards.forEach((card) => {
     total += card.count;
@@ -498,11 +510,54 @@ function refreshDeckCardCount() {
   $("#collapsed-count-info").text(total);
 }
 
-/// @brief sorts an array of color objecs
+/**
+ * Refreshes the deck format based off of #format-option. 
+ */
+function refreshDeckFormat() {
+  let formatName = $("#format-option").val().trim();
+  currentFormat = findFormat(formatName);
+  if (currentFormat.singleton) {
+    $(".card-container").each((index, object) => {
+      let card = findLoadedCard($(object).attr('data-name'));
+      let max = cardCountMax(card);
+      if (max == -1) {
+        $(object).find(".card-count-column>*:nth-child(n + 1)").css("display", "none");
+      }
+      else {
+        $(object).find(".card-count-column").css("display", "none");
+      }
+    });
+  }
+  else {
+    $(".card-count-column>*:nth-child(n + 1)").css("display", "none");
+    $(".card-count-column").css("display", "none");
+  }
+  refreshDeckCardCount();
+}
+
+/**
+ * Returns the maximum amount of cards legal in current deck format, or -1 if there is none
+ * @param {object} card loaded card object
+ * @returns integer
+ */
+function cardCountMax(card) {
+  if (card == null || card == undefined) return -1;
+  let name = card.name.toLowerCase();
+  console.log(name);
+  if (name == "mountain" || name == "plains" || name == "forest" || name == "swamp" || name == "island") return -1;
+  return (currentFormat.singleton ? 1 : 4);
+}
+
+/** 
+ * Sorts an array of color objecs
+ */
 function sortColorArray(arr) {
   return arr.sort((a, b) => colorData.get(a).order - colorData.get(b).order);
 }
 
+/**
+ * Toggles collapsable info section. 
+ */
 function toggleInfoSection() {
   $("#info-title").toggleClass("hidden");
   $("#info-form").toggleClass("hidden");
@@ -515,6 +570,22 @@ function toggleInfoSection() {
   }
 }
 
+/**
+ * Finds currently loaded card object by name. Case insensitive, no trim. 
+ * @param {*} name name of card
+ * @returns card object
+ */
 function findLoadedCard(name) {
-  return loadedCards.find((item) => item.name == name);
+  name = name.toLowerCase();
+  return loadedCards.find((item) => item.name.toLowerCase() == name);
+}
+
+/**
+ * Finds format object from list by name. Case insensitive, no trim. 
+ * @param {*} name name of format
+ * @returns format object
+ */
+function findFormat(name) {
+  name = name.toLowerCase();
+  return formats.find(item => item.name == name);
 }
