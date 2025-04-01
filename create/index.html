@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,7 +17,7 @@
   </head>
   <body>
     <nav>
-      <div id="nav-title">MTG Deck Tester</div>
+      <div id="nav-title" class="glow">MTG Deck Tester</div>
       <div id="link-container">
         <a href="/">HOME</a>
         <a href="/create">CREATE</a>
@@ -109,7 +109,7 @@
 
               <div
                 id="planeswalker-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">PLANESWALKERS</h1>
               </div>
@@ -118,21 +118,21 @@
             <div id="display-column-center" class="display-column">
               <div
                 id="artifact-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">ARTIFACTS</h1>
               </div>
 
               <div
                 id="enchantment-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">ENCHANTMENTS</h1>
               </div>
 
               <div
                 id="instant-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">INSTANTS</h1>
               </div>
@@ -141,17 +141,33 @@
             <div id="display-column-right" class="display-column">
               <div
                 id="sorcery-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">SORCERYS</h1>
               </div>
 
               <div
                 id="land-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">LANDS</h1>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <img id="drag-image" class="card-image hidden"></img>
+
+        <!--right click image menu-->
+        <div id="display-modal-container">
+          <div id="image-menu">
+            <div id="image-menu-plus" class="image-menu-item">Add One</div>
+            <div id="image-menu-minus" class="image-menu-item">Remove One</div>
+            <div id="image-menu-remove" class="image-menu-item">
+              Remove From Deck
+            </div>
+            <div id="image-menu-commander" class="image-menu-item">
+              Set As Commander
             </div>
           </div>
         </div>
@@ -169,6 +185,21 @@
           />
           <div id="search-err"></div>
         </form>
+        <!--searching animation-->
+        <div id="search-loading-container" class="hidden">
+          <div id="search-loading-anim">
+            <div style="--i: 1"></div>
+            <div style="--i: 2"></div>
+            <div style="--i: 3"></div>
+          </div>
+          <div id="loading-label">Searching...</div>
+        </div>
+
+        <!--no cards found screen-->
+        <div id="no-cards-container" class="hidden">
+          <div id="no-cards-icon"><i class="fa fa-question-circle-o"></i></div>
+          <div id="no-cards-label">No Cards Found</div>
+        </div>
         <!--<div id="search-results"></div>-->
       </div>
     </div>

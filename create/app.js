@@ -1,20 +1,26 @@
 let formatOption = document.getElementById("format-option");
 let cardContainer = document.querySelector(
-  "#card-display-container>#display-flex",
+  "#card-display-container>#display-flex"
 );
 let searchBar = document.getElementById("search-input");
 let formats = [
-  {name: "standard", singleton: false},
-  {name: "modern", singleton: false},
-  {name: "legacy", singleton: false},
-  {name: "pauper", singleton: false},
-  {name: "vintage", singleton: false},
-  {name: "brawl", singleton: false},
-  {name: "commander", singleton: true},
-  {name: "duel", singleton: false},
-  {name: "pioneer", singleton: false},
-  {name: "penny", singleton: false},
+  { name: "standard", singleton: false },
+  { name: "modern", singleton: false },
+  { name: "legacy", singleton: false },
+  { name: "pauper", singleton: false },
+  { name: "vintage", singleton: false },
+  { name: "brawl", singleton: false },
+  { name: "commander", singleton: true },
+  { name: "duel", singleton: false },
+  { name: "pioneer", singleton: false },
+  { name: "penny", singleton: false },
 ];
+
+let sheet = document.styleSheets[0];
+let rules = sheet.cssRules;
+
+//console.log(rules[rules.length - 1]);
+
 let loadedCards = [
   {
     object: "card",
@@ -156,6 +162,13 @@ let colorData = new Map();
 let numberStringMap = new Map();
 let deckSize = 0;
 let currentFormat = formats[0];
+let mouseDown = false;
+let dragStartX = -100;
+let dragStartY = -100;
+let startX = 0;
+let startY = 0;
+let newX = 0;
+let newY = 0;
 
 colorData.set("W", { name: "white", symbol: "{W}", order: 0 });
 colorData.set("U", { name: "blue", symbol: "{U}", order: 1 });
@@ -164,13 +177,37 @@ colorData.set("R", { name: "red", symbol: "{R}", order: 3 });
 colorData.set("G", { name: "green", symbol: "{G}", order: 4 });
 colorData.set("C", { name: "colorless", symbol: "{C}", order: 5 });
 
-const numberStrings = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+const numberStrings = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+];
 for (let i = 0; i < numberStrings.length; i++) {
   numberStringMap.set(numberStrings[i], i);
 }
 
 formats.forEach((format) => {
-  formatOption.innerHTML += `<option name="${format.name}">${format.name.charAt(0).toUpperCase() + format.name.slice(1)}</option>`;
+  formatOption.innerHTML += `<option name="${format.name}">${
+    format.name.charAt(0).toUpperCase() + format.name.slice(1)
+  }</option>`;
 });
 $("#format-collapsed-info").html($("#format-option").val().toUpperCase());
 refreshDeckColors();
@@ -191,19 +228,36 @@ $("#search-form").submit(function (event) {
   if (searchInput == "") return;
   $("#search-err").text("");
   $(".search-card").remove();
+  $("#no-cards-container").addClass("hidden");
+  $("#search-loading-container").removeClass("hidden");
   let searchUrl =
     searchInput[0] == "\\"
-      ? "https://api.scryfall.com/cards/search?unique=cards&q=" + searchInput.substr(1) + "&order=released"
+      ? "https://api.scryfall.com/cards/search?unique=cards&q=" +
+        searchInput.substr(1) +
+        "&order=released"
       : "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" +
         searchInput +
-        ".*/&order=released";
+        ".*/ f:" +
+        currentFormat.name +
+        "&order=released";
 
   $.ajax({
     url: searchUrl,
     type: "GET",
     success: function (cards) {
+      $("#search-loading-container").addClass("hidden");
       if (cards.object == "list" && cards.total_cards > 0) {
-        let format = $("#format-option").val().toLowerCase();
+        cards.data = cards.data.filter(
+          (card) =>
+            card.legalities != null &&
+            card.legalities != undefined &&
+            card.legalities[currentFormat.name] != "not_legal"
+        );
+        if (cards.data.length == 0) {
+          //$("#search-err").html("No cards found.");
+          $("#no-cards-container").removeClass("hidden");
+        }
+
         cards.data.forEach((card) => {
           if (
             card.object == "card" &&
@@ -212,12 +266,10 @@ $("#search-form").submit(function (event) {
             card.image_uris.normal != null &&
             card.legalities != null &&
             card.legalities != undefined &&
-            card.legalities[format] != "not_legal"
+            card.legalities[currentFormat.name] != "not_legal"
           ) {
             let cardEl = $(
-              "<img src='" +
-                pathToSelf(card.image_uris.normal) +
-                "' class='search-card'>",
+              "<img src='" + card.image_uris.normal + "' class='search-card'>"
             );
 
             cardEl.on("click", function (event) {
@@ -236,11 +288,10 @@ $("#search-form").submit(function (event) {
                 });
 
               if (!added) {
-                if ($("#format-option").val().toLowerCase() != "commander")
-                  card.count = 4;
+                if (!currentFormat.singleton) card.count = 4;
                 else card.count = 1;
                 let foundCard = loadedCards.find(
-                  (item) => item.name === card.name,
+                  (item) => item.name === card.name
                 );
                 if (foundCard != null && foundCard != undefined) {
                   foundCard.count = card.count;
@@ -259,47 +310,46 @@ $("#search-form").submit(function (event) {
                 //cardAdded.data("count", 4);
                 //$(cardContainer).append(cardAdded);
                 if (card.type_line.includes("Creature")) {
-                  $("#creature-display-container").show();
+                  $("#creature-display-container").removeClass("hidden");
                   $("#creature-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Planeswalker")) {
-                  $("#planeswalker-display-container").show();
+                  $("#planeswalker-display-container").removeClass("hidden");
                   $("#planeswalker-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Artifact")) {
-                  $("#artifact-display-container").show();
+                  $("#artifact-display-container").removeClass("hidden");
                   $("#artifact-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Enchantment")) {
-                  $("#enchantment-display-container").show();
+                  $("#enchantment-display-container").removeClass("hidden");
                   $("#enchantment-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Instant")) {
-                  $("#instant-display-container").show();
+                  $("#instant-display-container").removeClass("hidden");
                   $("#instant-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Sorcery")) {
-                  $("#sorcery-display-container").show();
+                  $("#sorcery-display-container").removeClass("hidden");
                   $("#sorcery-display-container").append(cardAdded);
                 } else if (card.type_line.includes("Land")) {
-                  $("#land-display-container").show();
+                  $("#land-display-container").removeClass("hidden");
                   $("#land-display-container").append(cardAdded);
                 }
                 refreshDeckColors();
-                refreshDeckCardCount();
+                refreshDeckFormat();
               }
 
               refreshEvents();
               $(
-                `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`,
+                `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`
               ).on("click", (event) => {
                 event.preventDefault();
                 let obj = $(event.target);
                 let card = loadedCards.find(
-                  (item) =>
-                    item.name == obj.parent().parent().attr("data-name"),
+                  (item) => item.name == obj.parent().parent().attr("data-name")
                 );
                 let updatedCount =
                   (event.target.innerHTML == "+" ? 1 : -1) + card.count;
                 card.count = updatedCount;
                 if (updatedCount <= 0) {
                   if (obj.parent().parent().parent().children().length == 2) {
-                    obj.parent().parent().parent().css("display", "none");
+                    obj.parent().parent().parent().addClass("hidden");
                   }
                   obj.parent().parent().remove();
                   refreshDeckColors();
@@ -314,19 +364,21 @@ $("#search-form").submit(function (event) {
           }
         });
       } else {
-        $("#search-err").html("No cards found.");
+        //$("#search-err").html("No cards found.");
+        $("#no-cards-container").removeClass("hidden");
       }
     },
     error: function (err) {
+      $("#search-loading-container").addClass("hidden");
       console.log(err);
       if (err.status == 404) {
-        $("#search-err").html("No cards found.");
+        $("#no-cards-container").removeClass("hidden");
       } else {
         $("#search-err").html(
           "There was an error with your request (" +
             err.status +
             "): " +
-            err.responseText,
+            err.responseText
         );
       }
     },
@@ -349,7 +401,9 @@ $(document).ready(() => {
 
   $("#format-option").on("change", (event) => {
     event.preventDefault();
-    let format = formats.find(item => item.name == $(event.target).val().toLowerCase());
+    let format = formats.find(
+      (item) => item.name == $(event.target).val().toLowerCase()
+    );
     $("#format-collapsed-info").html($(event.target).val().toUpperCase());
     refreshDeckFormat();
   });
@@ -363,7 +417,7 @@ $(document).ready(() => {
     event.preventDefault();
     let obj = $(event.target);
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().parent().attr("data-name"),
+      (item) => item.name == obj.parent().parent().attr("data-name")
     );
     let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
     card.count = updatedCount;
@@ -385,22 +439,15 @@ $(document).ready(() => {
     let name = $(event.target).parent().parent().find("img").attr("alt");
     let card = loadedCards.find((item) => item.name == name);
     let updatedCount = parseInt(
-      $(event.target).parent().find(".card-viewer-count-input").val(),
+      $(event.target).parent().find(".card-viewer-count-input").val()
     );
-    if (
-      card.name != "Mountain" &&
-      card.name != "Plains" &&
-      card.name != "Island" &&
-      card.name != "Forest" &&
-      card.name != "Swamp" &&
-      updatedCount >= 0 &&
-      updatedCount <= 4
-    ) {
+    let max = cardCountMax(card);
+    if (updatedCount >= 0 && (updatedCount <= max || max == -1)) {
       card.count = updatedCount;
       let cardObj = $('.card-container[data-name="' + name + '"]');
       if (card.count <= 0) {
         if (cardObj.parent().children().length == 2) {
-          cardObj.parent().css("display", "none");
+          cardObj.parent().addClass("hidden");
         }
         cardObj.remove();
       } else {
@@ -412,35 +459,126 @@ $(document).ready(() => {
     $("#modal-section").addClass("hidden");
     $("#card-viewer-container").addClass("hidden");
   });
-});
 
-function refreshEvents() {
-  $(".card-image").off();
-
-  $(".card-image").on("mousemove", (event) => {
+  $("#display-modal-container").on("click", (event) => {
     event.preventDefault();
-    let rect = event.target.getBoundingClientRect();
-    let y = event.clientY - rect.top;
-    if (y >= 80 && $(event.target).parent().next().length != 0) {
-      $(event.target).removeClass("card-image-hover");
+    let modal = $("#display-modal-container");
+    if (modal.css("display") != "none") modal.css("display", "none");
+  });
+
+  $("#display-modal-container").on("contextmenu", (event) => {
+    event.preventDefault();
+    let modal = $("#display-modal-container");
+    if (modal.css("display") != "none") modal.css("display", "none");
+  });
+
+  $("#image-menu-plus").on("click", (event) => {
+    event.preventDefault();
+    let cardName = $(event.target).parent().attr("data-name");
+    let plusBtn = $(
+      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-add`
+    );
+    plusBtn.click();
+  });
+
+  $("#image-menu-minus").on("click", (event) => {
+    event.preventDefault();
+    let cardName = $(event.target).parent().attr("data-name");
+    let minusBtn = $(
+      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-remove`
+    );
+    minusBtn.click();
+  });
+
+  $("#image-menu-remove").on("click", (event) => {
+    event.preventDefault();
+    let cardName = $(event.target).parent().attr("data-name");
+    let cardElement = $(`.card-container[data-name="${cardName}"]`);
+    let card = findLoadedCard(cardName);
+    card.count = 0;
+    if (cardElement.parent().children().length == 2) {
+      cardElement.parent().addClass("hidden");
+    }
+    cardElement.remove();
+    refreshDeckCardCount();
+    refreshDeckColors();
+  });
+
+  $("#display-section").on("mousemove", (event) => {
+    let dragImage = document.getElementById("drag-image");
+    if (
+      mouseDown &&
+      $(dragImage).hasClass("hidden") &&
+      Math.abs(event.clientX - dragStartX) > 3 &&
+      Math.abs(event.clientY - dragStartY) > 3
+    ) {
+      $(dragImage).removeClass("hidden");
+    }
+
+    if (mouseDown && !$(dragImage).hasClass("hidden")) {
+      let displaySection = document.getElementById("display-section");
+      let displayRect = displaySection.getBoundingClientRect();
+      let rect = dragImage.getBoundingClientRect();
+      let x = event.clientX - rect.width / 2;
+      let y = event.clientY - rect.height / 2;
+      x =
+        x < displayRect.left
+          ? displayRect.left
+          : x + rect.width - displayRect.left > displayRect.width
+          ? displayRect.width + displayRect.left - rect.width
+          : x;
+      y =
+        y < displayRect.top
+          ? displayRect.top
+          : y + rect.height - displayRect.top > displayRect.height
+          ? displayRect.height + displayRect.top - rect.height
+          : y;
+      $(dragImage).css("left", x + "px");
+      $(dragImage).css("top", y + "px");
     }
   });
 
-  $(".card-image").on("mouseenter", (event) => {
+  $("#display-section").on("mouseup", (event) => {
+    console.log("drag stop");
+    mouseDown = false;
+    dragStartX = -100;
+    dragStartY = -100;
+    $("#drag-image").addClass("hidden");
+  });
+});
+
+function refreshEvents() {
+  let cardImages = $(".card-image");
+
+  cardImages.off();
+
+  cardImages.on("mousemove", (event) => {
+    if (!mouseDown) {
+      event.preventDefault();
+      let rect = event.target.getBoundingClientRect();
+      let y = event.clientY - rect.top;
+      if (y >= 80 && $(event.target).parent().next().length != 0) {
+        $(event.target).removeClass("card-image-hover");
+      }
+    }
+  });
+
+  cardImages.on("mouseenter", (event) => {
     event.preventDefault();
     $(event.target).addClass("card-image-hover");
   });
 
-  $(".card-image").on("mouseleave", (event) => {
+  cardImages.on("mouseleave", (event) => {
     event.preventDefault();
     $(event.target).removeClass("card-image-hover");
   });
 
-  $(".card-image").on("click", (event) => {
+  cardImages.on("click", (event) => {
     event.preventDefault();
+    if (event.target.id == "drag-image") return;
     let obj = $(event.target);
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().attr("data-name"),
+      (item) => item.name == obj.parent().attr("data-name")
     );
     $(".card-viewer-image").attr("src", card.image_uris.png);
     $(".card-viewer-image").attr("alt", card.name);
@@ -449,8 +587,31 @@ function refreshEvents() {
     $("#card-viewer-container").removeClass("hidden");
   });
 
-  $(".card-image").on("contextmenu", (event) => {
+  cardImages.on("contextmenu", (event) => {
     event.preventDefault();
+    let imageModal = document.getElementById("display-section");
+    let modalRect = imageModal.getBoundingClientRect();
+    let rect = event.target.getBoundingClientRect();
+    let imageMenu = $("#image-menu");
+    imageMenu.css("left", event.offsetX + (rect.left - modalRect.left));
+    imageMenu.css("top", event.offsetY + (rect.top - modalRect.top));
+    imageMenu.attr("data-name", $(event.target).parent().attr("data-name"));
+    $("#display-modal-container").css("display", "block");
+  });
+
+  // draggable stuff
+  cardImages.on("dragstart", (event) => {
+    event.preventDefault();
+  });
+
+  cardImages.on("mousedown", (event) => {
+    console.log("drag start");
+    if (!mouseDown) {
+      mouseDown = true;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      $("#drag-image").attr("src", $(event.target).attr("src"));
+    }
   });
 }
 
@@ -467,7 +628,7 @@ $(document).on("keydown", (event) => {
 });
 
 /**
- * Refreshes deck colors (mainly for UI) based off card out. If no color is present, it will use the colorless mana symbol. 
+ * Refreshes deck colors (mainly for UI) based off card out. If no color is present, it will use the colorless mana symbol.
  */
 function refreshDeckColors() {
   deckColors = [];
@@ -490,47 +651,50 @@ function refreshDeckColors() {
   deckColors.forEach((color) => {
     color = colorData.get(color);
     $("#color-label").append(
-      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`,
+      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`
     );
     $("#color-collapsed-info").append(
-      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`,
+      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`
     );
   });
 }
 
 /**
- * Refreshes the card count based off of the cards out and the format. 
+ * Refreshes the card count based off of the cards out and the format.
  */
 function refreshDeckCardCount() {
   let total = 0;
   loadedCards.forEach((card) => {
-    total += card.count;
+    total +=
+      cardCountMax(card) == -1 || !currentFormat.singleton ? card.count : 1;
   });
   $("#card-count-info").text(total);
   $("#collapsed-count-info").text(total);
 }
 
 /**
- * Refreshes the deck format based off of #format-option. 
+ * Refreshes the deck format based off of #format-option.
  */
 function refreshDeckFormat() {
   let formatName = $("#format-option").val().trim();
   currentFormat = findFormat(formatName);
   if (currentFormat.singleton) {
     $(".card-container").each((index, object) => {
-      let card = findLoadedCard($(object).attr('data-name'));
+      let card = findLoadedCard($(object).attr("data-name"));
       let max = cardCountMax(card);
       if (max == -1) {
-        $(object).find(".card-count-column>*:nth-child(n + 1)").css("display", "none");
-      }
-      else {
-        $(object).find(".card-count-column").css("display", "none");
+        $(object)
+          .find(".card-count-column>*:nth-child(n + 2)")
+          .css("display", "none");
+      } else {
+        $(object).find(".card-count-column").addClass("hidden");
       }
     });
-  }
-  else {
-    $(".card-count-column>*:nth-child(n + 1)").css("display", "none");
-    $(".card-count-column").css("display", "none");
+    $(".card-container").addClass("singleton-view");
+  } else {
+    $(".card-count-column>*").css("display", "block");
+    $(".card-count-column").removeClass("hidden");
+    $(".card-container").removeClass("singleton-view");
   }
   refreshDeckCardCount();
 }
@@ -543,12 +707,18 @@ function refreshDeckFormat() {
 function cardCountMax(card) {
   if (card == null || card == undefined) return -1;
   let name = card.name.toLowerCase();
-  console.log(name);
-  if (name == "mountain" || name == "plains" || name == "forest" || name == "swamp" || name == "island") return -1;
-  return (currentFormat.singleton ? 1 : 4);
+  if (
+    name == "mountain" ||
+    name == "plains" ||
+    name == "forest" ||
+    name == "swamp" ||
+    name == "island"
+  )
+    return -1;
+  return currentFormat.singleton ? 1 : 4;
 }
 
-/** 
+/**
  * Sorts an array of color objecs
  */
 function sortColorArray(arr) {
@@ -556,7 +726,7 @@ function sortColorArray(arr) {
 }
 
 /**
- * Toggles collapsable info section. 
+ * Toggles collapsable info section.
  */
 function toggleInfoSection() {
   $("#info-title").toggleClass("hidden");
@@ -571,7 +741,7 @@ function toggleInfoSection() {
 }
 
 /**
- * Finds currently loaded card object by name. Case insensitive, no trim. 
+ * Finds currently loaded card object by name. Case insensitive, no trim.
  * @param {*} name name of card
  * @returns card object
  */
@@ -581,11 +751,11 @@ function findLoadedCard(name) {
 }
 
 /**
- * Finds format object from list by name. Case insensitive, no trim. 
+ * Finds format object from list by name. Case insensitive, no trim.
  * @param {*} name name of format
  * @returns format object
  */
 function findFormat(name) {
   name = name.toLowerCase();
-  return formats.find(item => item.name == name);
+  return formats.find((item) => item.name == name);
 }

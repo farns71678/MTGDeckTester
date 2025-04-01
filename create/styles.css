@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech&display=swap");
 
 * {
   margin: 0;
@@ -18,7 +18,8 @@ whole number widths are
 264 (x4) 12 px
 */
 
-html,body {
+html,
+body {
   height: 100%;
   max-height: 100%;
 }
@@ -69,10 +70,24 @@ nav {
   font-weight: bold;
   color: white;
   transition: color 0.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+  position: relative;
 }
 
-#link-container > a:hover {
-  color: #eb3324;
+#link-container > a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  bottom: -1px;
+  left: 50%;
+  background-color: #eb3324;
+  height: 3px;
+  transition: width 0.2s ease, left 0.2s ease-out;
+}
+
+#link-container > a:hover::after {
+  /*color: #eb3324;*/
+  width: 100%;
+  left: 0px;
 }
 
 #main-section {
@@ -119,7 +134,7 @@ nav {
   transition: color 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-#info-collapse-btn>i:hover {
+#info-collapse-btn > i:hover {
   color: #eb3324;
 }
 
@@ -159,7 +174,8 @@ h2 {
   width: fit-content;
 }
 
-.card-viewer-count-input,.info-input {
+.card-viewer-count-input,
+.info-input {
   background-color: #222;
   border: 2px solid #777;
   color: #ddd;
@@ -201,7 +217,7 @@ h2 {
   margin-bottom: 8px;
 }
 
-#color-collapsed-info>.card-color {
+#color-collapsed-info > .card-color {
   width: 22px;
   height: 22px;
   margin: 1px 1px 5px 1px;
@@ -215,7 +231,7 @@ h2 {
   font-weight: bold;
   font-size: 14pt;
   letter-spacing: 1px;
-  
+
   color: #eed;
   font-family: "Share Tech", monospace;
   font-variant: small-caps;
@@ -230,7 +246,7 @@ h2 {
   margin-bottom: 0px;
 }
 
-#card-count-collapsed-info>hr {
+#card-count-collapsed-info > hr {
   height: 2.3px;
   background-color: white;
   border: none;
@@ -244,43 +260,122 @@ h2 {
 #display-section {
   flex-grow: 5;
   height: 100%;
-  background-color: #333;
+  /*background-color: #333;*/
+  background-image: url("https://th.bing.com/th/id/OIP.iHqYoRUCtV98zJH7cFU7DgHaEK?rs=1&pid=ImgDetMain");
+  background-position: center;
+  background-size: cover;
   flex-shrink: 1;
   overflow: auto;
+  border-image: fill 1 linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+  box-shadow: inset 0 0 15em rgba(0, 0, 0, 0.8);
 }
 
 #card-display-container {
   width: 100%;
   padding: 20px;
   display: flex;
+  position: relative;
+}
+
+#display-modal-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: none;
+}
+
+#image-menu {
+  position: absolute;
+  top: -500px;
+  left: -500px;
+  background-color: #111;
+  border-radius: 5px;
+  width: max-content;
+  padding: 2px 3px 3px 3px;
+}
+
+.image-menu-item {
+  margin-top: 1px;
+  width: 100%;
+  background-color: #111;
+  border-radius: 5px;
+  border: 2px solid #111;
+  transition: all 0.3s ease;
+  padding: 3px 6px 3px 5px;
+  cursor: pointer;
+  font-size: 11pt;
+}
+
+.image-menu-item:hover {
+  border-color: #666;
+  background-color: #222;
+}
+
+#drag-image {
+  position: absolute;
+  z-index: 1;
 }
 
 #display-flex {
-  display: flex; 
+  display: flex;
 }
 
-#display-column-left,#display-column-center {
+#display-column-left,
+#display-column-center {
   margin-right: 20px;
 }
 
-#creature-display-container {
-  display: block;
+.display-column {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
 }
 
+/*#creature-display-container {
+  display: block;
+}*/
+
 .card-type-container {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
   margin-bottom: 16px;
 }
 
 .card-type-title {
   font-size: max(1em, 3.2vh);
   font-weight: 100;
-  color: #a30000;
-  /*width: 100%;*/
+  color: #eed;
+  width: 100%;
   text-align: center;
   margin-bottom: 2px;
   font-family: "Share Tech", "Noto Sans", sans-serif;
+  /*position: relative;
+  z-index: 0;*/
 }
+
+/*.card-type-title::after {
+  content: "CREATURES";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 77, 77, 1) 0%,
+    rgba(255, 156, 143, 1) 50%,
+    rgba(255, 77, 77, 1) 100%
+  );
+  z-index: -1;
+  color: transparent;
+  filter: blur(0.1em);
+  background-clip: text;
+}*/
 
 textarea {
   resize: none;
@@ -294,11 +389,15 @@ textarea {
   margin-top: -240px;
 }
 
+.card-container:nth-child(n + 3).singleton-view {
+  margin-top: -285px;
+}
+
 .card-count-column {
-  padding: 4px 4px;
+  padding: 12px 4px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: end;
 }
 
 .card-count {
@@ -316,6 +415,7 @@ textarea {
   font-size: 12pt;
   font-family: monospace;
   cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .card-count-add {
@@ -326,7 +426,7 @@ textarea {
 .card-count-add:hover {
   color: rgb(0, 220, 0);
   border-color: rgb(0, 220, 0);
-  background-color: rgba(0, 200, 0, 0.2)
+  background-color: rgba(0, 200, 0, 0.2);
 }
 
 .card-count-remove {
@@ -344,7 +444,8 @@ textarea {
   width: 231px;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.1s ease-out;
+  transition: translate 0.1s ease-out, box-shadow 0.1s ease-out;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
 }
 
 .clearfix::after {
@@ -360,6 +461,8 @@ textarea {
   padding: 6px;
   overflow-x: hidden;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 #search-input {
@@ -369,6 +472,7 @@ textarea {
 #search-err {
   color: red;
   max-width: 100%;
+  margin-top: 6px;
 }
 
 #search-results {
@@ -390,6 +494,62 @@ textarea {
   translate: 0 -3px;
   filter: drop-shadow(0 4px 7px rgba(30, 30, 30, 0.5));
   z-index: 0;
+}
+
+#search-loading-container,
+#no-cards-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  padding-bottom: 4em;
+  align-items: center;
+}
+
+#search-loading-anim {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#search-loading-anim > * {
+  width: 1.2em;
+  height: 1.2em;
+  background-color: rgb(90, 90, 90);
+  box-shadow: 0 0 0.2em rgb(30, 255, 30, 0.4),
+    inset 0 0 0.4em rgb(30, 255, 30, 0.1);
+  transform: translateY(0);
+  border-radius: 1.2em;
+  margin: 0.5em;
+  animation: search-animation 2.6s ease-in-out infinite;
+  animation-delay: calc(0.3s * var(--i));
+}
+
+@keyframes search-animation {
+  0%,
+  5%,
+  100%,
+  65% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-0.8em);
+  }
+}
+
+#loading-label,
+#no-cards-label {
+  color: #cecece;
+  font-size: 18pt;
+  font-family: "Share Tech", "Airal", sans-serif;
+  text-align: center;
+}
+
+#no-cards-icon > i {
+  font-size: 5.5em;
+  color: #cecece;
+  margin-bottom: 0.1em;
+  filter: drop-shadow(0 0 0.1em rgba(30, 255, 30, 0.3));
 }
 
 .card-image-hover {
@@ -441,7 +601,7 @@ textarea {
   color: #eed;
 }
 
-.card-viewer-count-row>.card-viewer-count-input {
+.card-viewer-count-row > .card-viewer-count-input {
   width: 5em;
 }
 
@@ -483,7 +643,7 @@ textarea {
 }
 
 .card-symbol-C {
-    background-image: url("../images/colorlessMana.svg");
+  background-image: url("../images/colorlessMana.svg");
 }
 
 .card-color {
@@ -504,22 +664,22 @@ textarea {
 }
 
 .card-symbol {
-    display: inline-block;
-    margin: 1px 1px -1px 1px;
-    -webkit-border-radius: 500px;
-    border-radius: 500px;
-    -webkit-box-shadow: -1px 1px 0 rgba(0, 0, 0, 0.85);
-    box-shadow: -1px 1px 0 rgba(0, 0, 0, 0.85);
-    text-indent: -999em;
-    overflow: hidden;
-    width: 15px;
-    height: 15px;
-    -webkit-background-size: 100% 100%;
-    background-size: 100% 100%;
-    background-position: top left;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-    print-color-adjust: exact;
+  display: inline-block;
+  margin: 1px 1px -1px 1px;
+  -webkit-border-radius: 500px;
+  border-radius: 500px;
+  -webkit-box-shadow: -1px 1px 0 rgba(0, 0, 0, 0.85);
+  box-shadow: -1px 1px 0 rgba(0, 0, 0, 0.85);
+  text-indent: -999em;
+  overflow: hidden;
+  width: 15px;
+  height: 15px;
+  -webkit-background-size: 100% 100%;
+  background-size: 100% 100%;
+  background-position: top left;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .hidden {
@@ -529,7 +689,6 @@ textarea {
 .visible {
   display: block;
 }
-
 
 @media only screen and (max-width: 1000px) {
   #search-input {
@@ -562,7 +721,15 @@ textarea {
     border-radius: 8px;
   }
 
+  .card-count-colun {
+    padding: 8px 4px;
+  }
+
   .card-container:nth-child(n + 3) {
-    margin-top: -200px;
+    margin-top: -195px;
+  }
+
+  .card-container:nth-child(n + 3).singleton-view {
+    margin-top: -245px;
   }
 }
