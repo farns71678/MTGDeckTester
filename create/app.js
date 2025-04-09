@@ -212,6 +212,7 @@ formats.forEach((format) => {
 $("#format-collapsed-info").html($("#format-option").val().toUpperCase());
 refreshDeckColors();
 refreshDeckCardCount();
+refreshSections();
 
 $(".card-container").each((indexed, obj) => {
   let name = $(obj).attr("data-name");
@@ -333,6 +334,7 @@ $("#search-form").submit(function (event) {
                 }
                 refreshDeckColors();
                 refreshDeckFormat();
+                refreshSections();
               }
 
               refreshEvents();
@@ -353,6 +355,7 @@ $("#search-form").submit(function (event) {
                   }
                   obj.parent().parent().remove();
                   refreshDeckColors();
+                  refreshSections();
                 } else {
                   obj.parent().find("span.count-span").html(updatedCount);
                 }
@@ -427,6 +430,7 @@ $(document).ready(() => {
       }
       obj.parent().parent().remove();
       refreshDeckColors();
+      refreshSections();
     } else {
       obj.parent().find("span.count-span").html(updatedCount);
     }
@@ -502,6 +506,7 @@ $(document).ready(() => {
     cardElement.remove();
     refreshDeckCardCount();
     refreshDeckColors();
+    refreshSections();
   });
 
   $("#display-section").on("mousemove", (event) => {
@@ -593,8 +598,8 @@ function refreshEvents() {
     let modalRect = imageModal.getBoundingClientRect();
     let rect = event.target.getBoundingClientRect();
     let imageMenu = $("#image-menu");
-    imageMenu.css("left", event.offsetX + (rect.left - modalRect.left));
-    imageMenu.css("top", event.offsetY + (rect.top - modalRect.top));
+    imageMenu.css("left", event.offsetX + rect.left);
+    imageMenu.css("top", event.offsetY + rect.top);
     imageMenu.attr("data-name", $(event.target).parent().attr("data-name"));
     $("#display-modal-container").css("display", "block");
   });
@@ -697,6 +702,38 @@ function refreshDeckFormat() {
     $(".card-container").removeClass("singleton-view");
   }
   refreshDeckCardCount();
+}
+
+function refreshSections() {
+  let heights = [];
+  $(".display-column>*").each((i, obj) => {
+    heights.push({ id: obj.id, height: obj.offsetHeight });
+  });
+
+  let groups = [
+    { sections: [heights[0].id], total: heights[0].height },
+    { sections: [], total: 0 },
+    {
+      sections: [heights[heights.length - 1].id],
+      total: heights[heights.length - 1].height,
+    },
+  ];
+  heights = heights.splice(1, heights.length - 2);
+  heights = heights.sort((a, b) => a.height - b.height);
+  for (let i = 0; i < heights.length; i++) {
+    let min = 0;
+    for (let j = 1; j < groups.length; j++) {
+      if (groups[j].total < groups[min].total) min = j;
+    }
+    if (min < 2) groups[min].sections.push(heights[i].id);
+    else groups[min].sections.unshift(heights[i].id);
+    groups[min].total += heights[i].height;
+  }
+  $(".display-column").each((index, obj) => {
+    for (let i = 0; i < groups[index].sections.length; i++) {
+      obj.appendChild(document.getElementById(groups[index].sections[i]));
+    }
+  });
 }
 
 /**

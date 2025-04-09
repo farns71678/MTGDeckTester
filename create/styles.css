@@ -203,6 +203,37 @@ h2 {
   margin-bottom: -5px;
 }
 
+#commander-info-container {
+  padding: 1.2em 1.2em 0.4em;
+  border-radius: 1em;
+  background-color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 15px;
+  transition: all 0.2s ease-in-out;
+}
+
+#commander-info-container:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.commander-display-image {
+  width: 231px;
+  border-radius: 10px;
+  cursor: pointer;
+  /*transition: translate 0.1s ease-out, box-shadow 0.1s ease-out;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);*/
+}
+
+#commander-header {
+  font-size: max(0.8em, 2.8vh);
+  font-weight: 100;
+  color: #eed;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 2px;
+  font-family: "Share Tech", "Noto Sans", sans-serif;
+  padding: 6px;
+}
+
 #collapsed-info {
   display: flex;
   flex-direction: column;
@@ -716,7 +747,8 @@ textarea {
     border-radius: 8px;
   }
 
-  .card-image {
+  .card-image,
+  .commander-display-image {
     width: 198px;
     border-radius: 8px;
   }
