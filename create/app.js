@@ -1,6 +1,6 @@
 let formatOption = document.getElementById("format-option");
 let cardContainer = document.querySelector(
-  "#card-display-container>#display-flex"
+  "#card-display-container>#display-flex",
 );
 let searchBar = document.getElementById("search-input");
 let formats = [
@@ -9,7 +9,7 @@ let formats = [
   { name: "legacy", singleton: false },
   { name: "pauper", singleton: false },
   { name: "vintage", singleton: false },
-  { name: "brawl", singleton: false },
+  { name: "brawl", singleton: true },
   { name: "commander", singleton: true },
   { name: "duel", singleton: false },
   { name: "pioneer", singleton: false },
@@ -18,11 +18,12 @@ let formats = [
 
 let sheet = document.styleSheets[0];
 let rules = sheet.cssRules;
+const PROXY_ON = false;
 
 //console.log(rules[rules.length - 1]);
 
 let loadedCards = [
-  {
+  /*{
     object: "card",
     id: "bc6ffc1c-575b-4116-83c9-d13b29886c35",
     oracle_id: "0f5a3a09-2f07-4774-9e0f-e99d9a444166",
@@ -31,6 +32,7 @@ let loadedCards = [
     tcgplayer_id: 591055,
     name: "Aurelia, the Warleader",
     count: 4,
+    commander: true,
     lang: "en",
     released_at: "2024-11-15",
     uri: "https://api.scryfall.com/cards/bc6ffc1c-575b-4116-83c9-d13b29886c35",
@@ -154,7 +156,7 @@ let loadedCards = [
       cardhoarder:
         "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Aurelia%2C+the+Warleader&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
     },
-  },
+  },*/
 ];
 
 let deckColors = [];
@@ -205,7 +207,7 @@ for (let i = 0; i < numberStrings.length; i++) {
 }
 
 formats.forEach((format) => {
-  formatOption.innerHTML += `<option name="${format.name}">${
+  formatOption.innerHTML += `<option value="${format.name}">${
     format.name.charAt(0).toUpperCase() + format.name.slice(1)
   }</option>`;
 });
@@ -231,16 +233,30 @@ $("#search-form").submit(function (event) {
   $(".search-card").remove();
   $("#no-cards-container").addClass("hidden");
   $("#search-loading-container").removeClass("hidden");
-  let searchUrl =
-    searchInput[0] == "\\"
-      ? "https://api.scryfall.com/cards/search?unique=cards&q=" +
-        searchInput.substr(1) +
-        "&order=released"
-      : "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" +
-        searchInput +
-        ".*/ f:" +
-        currentFormat.name +
-        "&order=released";
+  let searchUrl = null;
+  if (PROXY_ON) {
+    searchUrl =
+      searchInput[0] == "\\"
+        ? "../search?unique=cards&q=" +
+          searchInput.substr(1) +
+          "&order=released"
+        : "../search?unique=cards&q=name:/.*" +
+          searchInput +
+          ".*/ f:" +
+          currentFormat.name +
+          "&order=released";
+  } else {
+    searchUrl =
+      searchInput[0] == "\\"
+        ? "https://api.scryfall.com/cards/search?unique=cards&q=" +
+          searchInput.substr(1) +
+          "&order=released"
+        : "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" +
+          searchInput +
+          ".*/ f:" +
+          currentFormat.name +
+          "&order=released";
+  }
 
   $.ajax({
     url: searchUrl,
@@ -252,7 +268,7 @@ $("#search-form").submit(function (event) {
           (card) =>
             card.legalities != null &&
             card.legalities != undefined &&
-            card.legalities[currentFormat.name] != "not_legal"
+            card.legalities[currentFormat.name] != "not_legal",
         );
         if (cards.data.length == 0) {
           //$("#search-err").html("No cards found.");
@@ -269,82 +285,60 @@ $("#search-form").submit(function (event) {
             card.legalities != undefined &&
             card.legalities[currentFormat.name] != "not_legal"
           ) {
-            let cardEl = $(
-              "<img src='" + card.image_uris.normal + "' class='search-card'>"
-            );
+            let cardEl = null;
+            if (PROXY_ON) {
+              cardEl = $(
+                "<img src='" +
+                  pathToSelf(card.image_uris.normal) +
+                  "' class='search-card'>",
+              );
+            } else {
+              cardEl = $(
+                "<img src='" +
+                  card.image_uris.normal +
+                  "' class='search-card'>",
+              );
+            }
 
             cardEl.on("click", function (event) {
               event.preventDefault();
 
-              let added = false;
-              $(cardContainer)
-                .children()
-                .each((i, object) => {
-                  $(object)
-                    .children()
-                    .each((index, element) => {
-                      if ($(element).attr("data-name") === card.name)
-                        added = true;
-                    });
-                });
+              let loadedCard = findLoadedCard(card.name);
 
-              if (!added) {
-                if (!currentFormat.singleton) card.count = 4;
-                else card.count = 1;
+              if (loadedCard == null || loadedCard == undefined) {
+                let cardMax = cardCountMax(card, false);
+                if (cardMax == -1) card.count = 10;
+                else card.count = cardMax;
                 let foundCard = loadedCards.find(
-                  (item) => item.name === card.name
+                  (item) => item.name === card.name,
                 );
                 if (foundCard != null && foundCard != undefined) {
                   foundCard.count = card.count;
+                  foundCard.commander = false;
                 } else {
                   loadedCards.push(card);
                 }
-                let cardAdded =
-                  $(`<div class="card-container" data-count="4" data-name="${card.name}" data-scryfall="${card.uri}">
-                <div class="card-count-column">
-                  <div class="card-count">&times;<span class="count-span">4</span></div>
-                  <div class="card-count-add card-count-btn">&plus;</div>
-                  <div class="card-count-remove card-count-btn">&minus;</div>
-                </div>
-                <img src="${card.image_uris.normal}" class="card-image">
-              </div>`);
-                //cardAdded.data("count", 4);
-                //$(cardContainer).append(cardAdded);
-                if (card.type_line.includes("Creature")) {
-                  $("#creature-display-container").removeClass("hidden");
-                  $("#creature-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Planeswalker")) {
-                  $("#planeswalker-display-container").removeClass("hidden");
-                  $("#planeswalker-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Artifact")) {
-                  $("#artifact-display-container").removeClass("hidden");
-                  $("#artifact-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Enchantment")) {
-                  $("#enchantment-display-container").removeClass("hidden");
-                  $("#enchantment-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Instant")) {
-                  $("#instant-display-container").removeClass("hidden");
-                  $("#instant-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Sorcery")) {
-                  $("#sorcery-display-container").removeClass("hidden");
-                  $("#sorcery-display-container").append(cardAdded);
-                } else if (card.type_line.includes("Land")) {
-                  $("#land-display-container").removeClass("hidden");
-                  $("#land-display-container").append(cardAdded);
-                }
+                addCard(card);
                 refreshDeckColors();
-                refreshDeckFormat();
+                refreshSections();
+              } else if (loadedCard.count <= 0) {
+                let cardMax = cardCountMax(card, false);
+                if (cardMax == -1) card.count = 10;
+                else card.count = cardMax;
+                loadedCard.count = card.count;
+                addCard(card);
+                refreshDeckColors();
                 refreshSections();
               }
 
-              refreshEvents();
               $(
-                `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`
+                `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`,
               ).on("click", (event) => {
                 event.preventDefault();
                 let obj = $(event.target);
                 let card = loadedCards.find(
-                  (item) => item.name == obj.parent().parent().attr("data-name")
+                  (item) =>
+                    item.name == obj.parent().parent().attr("data-name"),
                 );
                 let updatedCount =
                   (event.target.innerHTML == "+" ? 1 : -1) + card.count;
@@ -381,7 +375,7 @@ $("#search-form").submit(function (event) {
           "There was an error with your request (" +
             err.status +
             "): " +
-            err.responseText
+            err.responseText,
         );
       }
     },
@@ -394,18 +388,12 @@ function pathToSelf(url) {
 
 $(document).ready(() => {
   refreshEvents();
-
-  if (
-    localStorage.getItem("info-collapsed") != null &&
-    localStorage.getItem("info-collapsed") == "true"
-  ) {
-    toggleInfoSection();
-  }
+  loadLocalStorage();
 
   $("#format-option").on("change", (event) => {
     event.preventDefault();
-    let format = formats.find(
-      (item) => item.name == $(event.target).val().toLowerCase()
+    currentFormat = formats.find(
+      (item) => item.name == $(event.target).val().toLowerCase(),
     );
     $("#format-collapsed-info").html($(event.target).val().toUpperCase());
     refreshDeckFormat();
@@ -420,15 +408,12 @@ $(document).ready(() => {
     event.preventDefault();
     let obj = $(event.target);
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().parent().attr("data-name")
+      (item) => item.name == obj.parent().parent().attr("data-name"),
     );
     let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
     card.count = updatedCount;
     if (updatedCount <= 0) {
-      if (obj.parent().parent().parent().children().length == 2) {
-        obj.parent().parent().parent().css("display", "none");
-      }
-      obj.parent().parent().remove();
+      removeCard(card);
       refreshDeckColors();
       refreshSections();
     } else {
@@ -443,17 +428,16 @@ $(document).ready(() => {
     let name = $(event.target).parent().parent().find("img").attr("alt");
     let card = loadedCards.find((item) => item.name == name);
     let updatedCount = parseInt(
-      $(event.target).parent().find(".card-viewer-count-input").val()
+      $(event.target).parent().find(".card-viewer-count-input").val(),
     );
     let max = cardCountMax(card);
     if (updatedCount >= 0 && (updatedCount <= max || max == -1)) {
       card.count = updatedCount;
       let cardObj = $('.card-container[data-name="' + name + '"]');
       if (card.count <= 0) {
-        if (cardObj.parent().children().length == 2) {
-          cardObj.parent().addClass("hidden");
-        }
-        cardObj.remove();
+        removeCard(card);
+        refreshDeckColors();
+        refreshSections();
       } else {
         cardObj.find("span.count-span").html(card.count);
       }
@@ -480,7 +464,7 @@ $(document).ready(() => {
     event.preventDefault();
     let cardName = $(event.target).parent().attr("data-name");
     let plusBtn = $(
-      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-add`
+      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-add`,
     );
     plusBtn.click();
   });
@@ -489,7 +473,7 @@ $(document).ready(() => {
     event.preventDefault();
     let cardName = $(event.target).parent().attr("data-name");
     let minusBtn = $(
-      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-remove`
+      `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-remove`,
     );
     minusBtn.click();
   });
@@ -497,15 +481,36 @@ $(document).ready(() => {
   $("#image-menu-remove").on("click", (event) => {
     event.preventDefault();
     let cardName = $(event.target).parent().attr("data-name");
-    let cardElement = $(`.card-container[data-name="${cardName}"]`);
     let card = findLoadedCard(cardName);
     card.count = 0;
-    if (cardElement.parent().children().length == 2) {
-      cardElement.parent().addClass("hidden");
-    }
-    cardElement.remove();
+    removeCard(card);
+    console.log(loadedCards);
     refreshDeckCardCount();
     refreshDeckColors();
+    refreshSections();
+  });
+
+  $("#image-menu-commander").on("click", (event) => {
+    event.preventDefault();
+    if (
+      currentFormat.name != "commander" ||
+      event.target.classList.contains("disabled")
+    )
+      return;
+    let cardName = $(event.target).parent().attr("data-name");
+    let card = findLoadedCard(cardName);
+    if (card != null && card != undefined) {
+      let commander = loadedCards.find((item) => item.commander);
+      if (commander != null && commander != undefined) {
+        commander.commander = false;
+        addCard(commander);
+      }
+      card.commander = true;
+      removeCard(card);
+      $(".commander-display-image").attr("src", card.image_uris.normal);
+      $(".commander-display-image").attr("data-name", card.name);
+      $("#commander-info-container").removeClass("hidden");
+    }
     refreshSections();
   });
 
@@ -530,14 +535,14 @@ $(document).ready(() => {
         x < displayRect.left
           ? displayRect.left
           : x + rect.width - displayRect.left > displayRect.width
-          ? displayRect.width + displayRect.left - rect.width
-          : x;
+            ? displayRect.width + displayRect.left - rect.width
+            : x;
       y =
         y < displayRect.top
           ? displayRect.top
           : y + rect.height - displayRect.top > displayRect.height
-          ? displayRect.height + displayRect.top - rect.height
-          : y;
+            ? displayRect.height + displayRect.top - rect.height
+            : y;
       $(dragImage).css("left", x + "px");
       $(dragImage).css("top", y + "px");
     }
@@ -550,8 +555,38 @@ $(document).ready(() => {
     dragStartY = -100;
     $("#drag-image").addClass("hidden");
   });
-});
 
+  $(".commander-display-image").on("contextmenu", commanderContext);
+
+  $("#commander-menu-remove").on("click", (event) => {
+    event.preventDefault();
+    console.log("called");
+    let cardName = $(event.target).parent().attr("data-name");
+    $("#commander-info-container").addClass("hidden");
+    let card = findLoadedCard(cardName);
+    card.commander = false;
+    addCard(card);
+  });
+
+  $(".dropdown-btn").click((event) => {
+    event.preventDefault();
+    $("#dropdown-container").toggleClass("focused");
+  });
+
+  $(".dropdown-item,#main-section").click((event) => {
+    $("#dropdown-container").removeClass("focused");
+  });
+
+  $(".dropdown-view").click((event) => dropdownViewToggle(event.target));
+  $(".dropdown-view>i").click((event) =>
+    dropdownViewToggle(event.target.parentNode),
+  );
+});
+// ^ document).ready
+
+/**
+ * Refreshes card image events.
+ */
 function refreshEvents() {
   let cardImages = $(".card-image");
 
@@ -562,7 +597,10 @@ function refreshEvents() {
       event.preventDefault();
       let rect = event.target.getBoundingClientRect();
       let y = event.clientY - rect.top;
-      if (y >= 80 && $(event.target).parent().next().length != 0) {
+      if (
+        (currentFormat.singleton ? y >= 35 : y >= 80) &&
+        $(event.target).parent().next().length != 0
+      ) {
         $(event.target).removeClass("card-image-hover");
       }
     }
@@ -583,7 +621,7 @@ function refreshEvents() {
     if (event.target.id == "drag-image") return;
     let obj = $(event.target);
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().attr("data-name")
+      (item) => item.name == obj.parent().attr("data-name"),
     );
     $(".card-viewer-image").attr("src", card.image_uris.png);
     $(".card-viewer-image").attr("alt", card.name);
@@ -594,14 +632,32 @@ function refreshEvents() {
 
   cardImages.on("contextmenu", (event) => {
     event.preventDefault();
-    let imageModal = document.getElementById("display-section");
-    let modalRect = imageModal.getBoundingClientRect();
     let rect = event.target.getBoundingClientRect();
     let imageMenu = $("#image-menu");
+    let commanderMenu = $("#commander-menu");
+    commanderMenu.css("left", "-500px");
+    commanderMenu.css("top", "-500px");
     imageMenu.css("left", event.offsetX + rect.left);
     imageMenu.css("top", event.offsetY + rect.top);
     imageMenu.attr("data-name", $(event.target).parent().attr("data-name"));
     $("#display-modal-container").css("display", "block");
+
+    let card = findLoadedCard($(event.target).parent().attr("data-name"));
+    console.log(card.type_line);
+    if (card != null && card != undefined) {
+      if (
+        currentFormat.name != "commander" ||
+        !(
+          card.type_line.includes("Legendary") &&
+          card.type_line.includes("Creature")
+        )
+      ) {
+        $("#image-menu-commander").addClass("disabled");
+        console.log("setting disabled");
+      } else {
+        $("#image-menu-commander").removeClass("disabled");
+      }
+    }
   });
 
   // draggable stuff
@@ -632,18 +688,132 @@ $(document).on("keydown", (event) => {
   }
 });
 
+function loadLocalStorage() {
+  let cards = localStorage.getItem("cards");
+  let format = localStorage.getItem("format");
+  let view = localStorage.getItem("view");
+  if (view != null && view != undefined) {
+    view = JSON.parse(view);
+    if (view.collapsed != null && view.collapsed == true) {
+      toggleInfoSection();
+    }
+    if (view.card_headers != null && view.card_headers == false) {
+      $(".card-type-title").addClass("hidden");
+      let icon = $(".dropdown-view[data-element='card-type-title']>i");
+      icon.removeClass("bxs-show");
+      icon.addClass("bxs-hide");
+    }
+    if (view.add_remove != null && view.add_remove == true) {
+      $(".display-column").addClass("collapsed-view");
+      let icon = $(".dropdown-view[data-value='collapsed-view']>i");
+      icon.removeClass("bxs-show");
+      icon.addClass("bxs-hide");
+    }
+  }
+  if (format != null && format != undefined) {
+    formatOption.value = format;
+    refreshDeckFormat();
+  }
+  if (cards == null || cards == undefined) loadedCards = [];
+  else {
+    loadedCards = JSON.parse(cards).list;
+    for (let i = 0; i < loadedCards.length; i++) {
+      $.ajax({
+        url: loadedCards[i].uri,
+        type: "GET",
+        success: function (res) {
+          loadedCards[i] = { ...loadedCards[i], ...res };
+          console.log(loadedCards[i]);
+          addCard(loadedCards[i]);
+          refreshDeckColors();
+          refreshSections();
+        },
+        error: function (err) {
+          console.log(err);
+        },
+      });
+    }
+  }
+}
+
+function writeAllLocalStorage() {
+  writeCardsLocalStorage();
+  writeFormatLocalStorage();
+  writeViewLocalStorage();
+}
+
+function writeFormatLocalStorage() {
+  localStorage.setItem("format", currentFormat.name);
+}
+
+function writeViewLocalStorage() {
+  localStorage.setItem("view", JSON.stringify(getViewStorageJSON()));
+}
+
+function getViewStorageJSON() {
+  let json = {
+    collapsed: $("#info-title").hasClass("hidden"),
+    card_headers: $(".card-type-title").hasClass("hidden"),
+    add_remove: $(".display-column").hasClass("collapsed-view"),
+  };
+  return json;
+}
+
+function writeCardsLocalStorage() {
+  localStorage.setItem("cards", JSON.stringify(getCardStorageJSON()));
+}
+
+/**
+ * Returns the JSON object format of the currently loaded cards.
+ */
+function getCardStorageJSON() {
+  let json = { list: [] };
+  loadedCards.forEach((card) => {
+    let addedCard = {};
+    if (
+      card.count != null &&
+      card.count != undefined &&
+      card.count > 0 &&
+      card.uri != null &&
+      card.uri != undefined
+    ) {
+      if (card.commander != null && card.commander != undefined)
+        addedCard.commander = card.commander;
+      else addedCard.commander = false;
+      addedCard.count = card.count;
+      addedCard.uri = card.uri;
+      addedCard.name = card.name;
+      addedCard.image_uris = card.image_uris;
+      addedCard.color_identity = card.color_identity;
+      addedCard.type_line = card.type_line;
+      json.list.push(addedCard);
+    }
+  });
+  return json;
+}
+
 /**
  * Refreshes deck colors (mainly for UI) based off card out. If no color is present, it will use the colorless mana symbol.
  */
 function refreshDeckColors() {
   deckColors = [];
-  $(".card-container").each((i, obj) => {
+  /*$(".card-container").each((i, obj) => {
     let name = $(obj).attr("data-name");
     let loadedCard = loadedCards.find((item) => item.name === name);
     if (loadedCard && loadedCard.count > 0) {
       for (let i = 0; i < loadedCard.color_identity.length; i++) {
         if (!deckColors.find((item) => item == loadedCard.color_identity[i])) {
           deckColors.push(loadedCard.color_identity[i]);
+        }
+      }
+    }
+  });*/
+
+  loadedCards.forEach((card) => {
+    if (card && card.count > 0) {
+      for (let i = 0; i < card.color_identity.length; i++) {
+        if (!deckColors.find((item) => item == card.color_identity[i])) {
+          deckColors.push(card.color_identity[i]);
         }
       }
     }
@@ -656,10 +826,10 @@ function refreshDeckColors() {
   deckColors.forEach((color) => {
     color = colorData.get(color);
     $("#color-label").append(
-      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`
+      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`,
     );
     $("#color-collapsed-info").append(
-      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`
+      `<div class='card-color card-symbol-${color.symbol[1]}'>${color.symbol}</div>`,
     );
   });
 }
@@ -670,8 +840,10 @@ function refreshDeckColors() {
 function refreshDeckCardCount() {
   let total = 0;
   loadedCards.forEach((card) => {
-    total +=
-      cardCountMax(card) == -1 || !currentFormat.singleton ? card.count : 1;
+    if (card.count > 0) {
+      total +=
+        cardCountMax(card) == -1 || !currentFormat.singleton ? card.count : 1;
+    }
   });
   $("#card-count-info").text(total);
   $("#collapsed-count-info").text(total);
@@ -683,6 +855,7 @@ function refreshDeckCardCount() {
 function refreshDeckFormat() {
   let formatName = $("#format-option").val().trim();
   currentFormat = findFormat(formatName);
+  $("#format-collapsed-info").html(formatName.toUpperCase());
   if (currentFormat.singleton) {
     $(".card-container").each((index, object) => {
       let card = findLoadedCard($(object).attr("data-name"));
@@ -701,6 +874,33 @@ function refreshDeckFormat() {
     $(".card-count-column").removeClass("hidden");
     $(".card-container").removeClass("singleton-view");
   }
+
+  // set or remove commander if visible
+  let commander = loadedCards.find((item) => item.commander);
+  if (currentFormat.name != "commander" && currentFormat.name != "brawl") {
+    if (
+      commander != null &&
+      commander != undefined &&
+      !$("#commander-info-container").hasClass("hidden")
+    ) {
+      $("#commander-info-container").addClass("hidden");
+      addCard(commander);
+      refreshSections();
+    }
+  } else {
+    if (
+      commander != null &&
+      commander != undefined &&
+      $("#commander-info-container").hasClass("hidden")
+    ) {
+      $(".commander-display-image").attr("src", commander.image_uris.normal);
+      $(".commander-display-image").attr("data-name", commander.name);
+      $("#commander-info-container").removeClass("hidden");
+      removeCard(commander);
+      refreshSections();
+    }
+  }
+  writeFormatLocalStorage();
   refreshDeckCardCount();
 }
 
@@ -719,7 +919,7 @@ function refreshSections() {
     },
   ];
   heights = heights.splice(1, heights.length - 2);
-  heights = heights.sort((a, b) => a.height - b.height);
+  heights = heights.sort((a, b) => b.height - a.height);
   for (let i = 0; i < heights.length; i++) {
     let min = 0;
     for (let j = 1; j < groups.length; j++) {
@@ -736,12 +936,33 @@ function refreshSections() {
   });
 }
 
+function dropdownViewToggle(el) {
+  let type = $(el).attr("data-type");
+  let element = $(el).attr("data-element");
+  let icon = $(el).find("i");
+  if (type != "toggle") {
+    if (icon.hasClass("bxs-show")) {
+      $((type == "class" ? "." : "#") + element).addClass("hidden");
+      icon.removeClass("bxs-show");
+      icon.addClass("bxs-hide");
+    } else {
+      $((type == "class" ? "." : "#") + element).removeClass("hidden");
+      icon.removeClass("bxs-hide");
+      icon.addClass("bxs-show");
+    }
+  } else {
+    $(icon).toggleClass("bxs-show");
+    $(icon).toggleClass("bxs-hide");
+    $(element).toggleClass($(el).attr("data-value"));
+  }
+}
+
 /**
- * Returns the maximum amount of cards legal in current deck format, or -1 if there is none
+ * Returns the maximum amount of cards legal in current deck format, or -1 if there is no limit.
  * @param {object} card loaded card object
  * @returns integer
  */
-function cardCountMax(card) {
+function cardCountMax(card, legality = true) {
   if (card == null || card == undefined) return -1;
   let name = card.name.toLowerCase();
   if (
@@ -752,7 +973,7 @@ function cardCountMax(card) {
     name == "island"
   )
     return -1;
-  return currentFormat.singleton ? 1 : 4;
+  return legality && currentFormat.singleton ? 1 : 4;
 }
 
 /**
@@ -770,11 +991,81 @@ function toggleInfoSection() {
   $("#info-form").toggleClass("hidden");
   $("#collapsed-info").toggleClass("hidden");
   $("#info-section").toggleClass("info-section-collapsed");
-  if ($("#info-title").hasClass("hidden")) {
-    localStorage.setItem("info-collapsed", "true");
-  } else {
-    localStorage.setItem("info-collapsed", "false");
+  writeViewLocalStorage();
+}
+
+/**
+ * Context menu handler function for commander image.
+ */
+function commanderContext(event) {
+  event.preventDefault();
+  let rect = event.target.getBoundingClientRect();
+  let imageMenu = $("#image-menu");
+  let commanderMenu = $("#commander-menu");
+  imageMenu.css("left", "-500px");
+  imageMenu.css("top", "-500px");
+  commanderMenu.css("left", event.offsetX + rect.left);
+  commanderMenu.css("top", event.offsetY + rect.top);
+  commanderMenu.attr("data-name", $(event.target).attr("data-name"));
+  $("#display-modal-container").css("display", "block");
+}
+
+/**
+ * Adds a card to the deck display.
+ * Refreshes events and deck format, but not sections. Call <code>refreshSections()</code> after.
+ * @param {*} card card object in loadedCards
+ */
+function addCard(card) {
+  let cardAdded =
+    $(`<div class="card-container" data-count="4" data-name="${card.name}" data-scryfall="${card.uri}">
+  <div class="card-count-column">
+    <div class="card-count">&times;<span class="count-span">4</span></div>
+    <div class="card-count-add card-count-btn">&plus;</div>
+    <div class="card-count-remove card-count-btn">&minus;</div>
+  </div>
+  <img src="${card.image_uris.normal}" class="card-image">
+  </div>`);
+  //cardAdded.data("count", 4);
+  //$(cardContainer).append(cardAdded);
+  if (card.type_line.includes("Creature")) {
+    $("#creature-display-container").removeClass("hidden");
+    $("#creature-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Planeswalker")) {
+    $("#planeswalker-display-container").removeClass("hidden");
+    $("#planeswalker-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Artifact")) {
+    $("#artifact-display-container").removeClass("hidden");
+    $("#artifact-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Enchantment")) {
+    $("#enchantment-display-container").removeClass("hidden");
+    $("#enchantment-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Instant")) {
+    $("#instant-display-container").removeClass("hidden");
+    $("#instant-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Sorcery")) {
+    $("#sorcery-display-container").removeClass("hidden");
+    $("#sorcery-display-container").append(cardAdded);
+  } else if (card.type_line.includes("Land")) {
+    $("#land-display-container").removeClass("hidden");
+    $("#land-display-container").append(cardAdded);
   }
+
+  refreshDeckFormat();
+  refreshEvents();
+  writeCardsLocalStorage();
+}
+
+/**
+ * Removes a card from the deck display.
+ * Does not refresh anything. Call <code>refreshDeckColors()</code> and <code>refreshSections()</code> after.
+ */
+function removeCard(card) {
+  let cardObj = $(`.card-container[data-name="${card.name}"]`);
+  if (cardObj.parent().children().length == 2) {
+    cardObj.parent().addClass("hidden");
+  }
+  cardObj.remove();
+  writeCardsLocalStorage();
 }
 
 /**

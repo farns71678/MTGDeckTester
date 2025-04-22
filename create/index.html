@@ -11,12 +11,30 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="./create/app.js" defer></script>
   </head>
   <body>
     <nav>
+      <div id="dropdown-container">
+        <div class="dropdown">
+          <div class="dropdown-btn">Edit</div>
+          <div class="dropdown-content">
+            <div class="dropdown-item">Undo</div>
+            <div class="dropdown-item">Redo</div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <div class="dropdown-btn">View</div>
+          <div class="dropdown-content">
+            <div class="dropdown-item dropdown-view" data-type='class' data-element='card-type-title'>Headers<i class="bx bxs-show"></i></div>
+            <div class="dropdown-item dropdown-view" data-type='toggle' data-element='.display-column' data-value='collapsed-view'>Add/Remove<i class="bx bxs-show"></i></div>
+          </div>
+        </div>
+      </div>
       <div id="nav-title" class="glow">MTG Deck Tester</div>
       <div id="link-container">
         <a href="/">HOME</a>
@@ -83,16 +101,16 @@
         <div id="card-display-container">
           <div id="display-flex">
             <div id="display-column-left" class="display-column">
-              <div id="commander-info-container" class="clearfix">
-                <img src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066" alt="Commander" class="commander-display-image">
+              <div id="commander-info-container" class="hidden clearfix">
+                <img src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066" alt="Commander" class="commander-display-image" data-name="Aurelia, the Warleader">
                 <h1 id="commander-header">COMMANDER</h1>
               </div>
               <div
                 id="creature-display-container"
-                class="card-type-container clearfix"
+                class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">CREATURES</h1>
-                <div
+                <!--<div
                   class="card-container"
                   data-count="4"
                   data-name="Aurelia, the Warleader"
@@ -109,7 +127,7 @@
                     src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066"
                     class="card-image"
                   />
-                </div>
+                </div>-->
               </div>
 
               <div
@@ -165,15 +183,18 @@
 
         <!--right click image menu-->
         <div id="display-modal-container">
-          <div id="image-menu">
-            <div id="image-menu-plus" class="image-menu-item">Add One</div>
-            <div id="image-menu-minus" class="image-menu-item">Remove One</div>
-            <div id="image-menu-remove" class="image-menu-item">
+          <div id="image-menu" class="context-menu">
+            <div id="image-menu-plus" class="image-menu-item context-menu-item">Add One</div>
+            <div id="image-menu-minus" class="image-menu-item context-menu-item">Remove One</div>
+            <div id="image-menu-remove" class="image-menu-item context-menu-item">
               Remove From Deck
             </div>
-            <div id="image-menu-commander" class="image-menu-item">
+            <div id="image-menu-commander" class="image-menu-item context-menu-item">
               Set As Commander
             </div>
+          </div>
+          <div id="commander-menu" class="context-menu">
+            <div id="commander-menu-remove" class="context-menu-item">Remove</div>
           </div>
         </div>
       </div>
