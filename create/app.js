@@ -4,16 +4,16 @@ let cardContainer = document.querySelector(
 );
 let searchBar = document.getElementById("search-input");
 let formats = [
-  { name: "standard", singleton: false },
-  { name: "modern", singleton: false },
-  { name: "legacy", singleton: false },
-  { name: "pauper", singleton: false },
-  { name: "vintage", singleton: false },
-  { name: "brawl", singleton: true },
-  { name: "commander", singleton: true },
-  { name: "duel", singleton: false },
-  { name: "pioneer", singleton: false },
-  { name: "penny", singleton: false },
+  { name: "standard", singleton: false, size: 60 },
+  { name: "modern", singleton: false, size: 60 },
+  { name: "legacy", singleton: false, size: 60 },
+  { name: "pauper", singleton: false, size: 60 },
+  { name: "vintage", singleton: false, size: 60 },
+  { name: "brawl", singleton: true, size: 60 },
+  { name: "commander", singleton: true, size: 100 },
+  { name: "duel", singleton: false, size: 60 },
+  { name: "pioneer", singleton: false, size: 60 },
+  { name: "penny", singleton: false, size: 60 },
 ];
 
 let sheet = document.styleSheets[0];
@@ -171,6 +171,8 @@ let startX = 0;
 let startY = 0;
 let newX = 0;
 let newY = 0;
+let grabbedImage = null;
+let shifftedImage = false;
 
 colorData.set("W", { name: "white", symbol: "{W}", order: 0 });
 colorData.set("U", { name: "blue", symbol: "{U}", order: 1 });
@@ -330,31 +332,6 @@ $("#search-form").submit(function (event) {
                 refreshDeckColors();
                 refreshSections();
               }
-
-              $(
-                `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`,
-              ).on("click", (event) => {
-                event.preventDefault();
-                let obj = $(event.target);
-                let card = loadedCards.find(
-                  (item) =>
-                    item.name == obj.parent().parent().attr("data-name"),
-                );
-                let updatedCount =
-                  (event.target.innerHTML == "+" ? 1 : -1) + card.count;
-                card.count = updatedCount;
-                if (updatedCount <= 0) {
-                  if (obj.parent().parent().parent().children().length == 2) {
-                    obj.parent().parent().parent().addClass("hidden");
-                  }
-                  obj.parent().parent().remove();
-                  refreshDeckColors();
-                  refreshSections();
-                } else {
-                  obj.parent().find("span.count-span").html(updatedCount);
-                }
-                refreshDeckCardCount();
-              });
             });
 
             $("#search-section").append(cardEl);
@@ -396,7 +373,16 @@ $(document).ready(() => {
       (item) => item.name == $(event.target).val().toLowerCase(),
     );
     $("#format-collapsed-info").html($(event.target).val().toUpperCase());
+    writeInfoLocalStorage();
     refreshDeckFormat();
+  });
+
+  $("#deck-name-input").on("input", (event) => {
+    writeInfoLocalStorage();
+  });
+
+  $("#description-input").on("input", (event) => {
+    writeInfoLocalStorage();
   });
 
   $("#info-collapse-btn>i").on("click", (event) => {
@@ -493,7 +479,7 @@ $(document).ready(() => {
   $("#image-menu-commander").on("click", (event) => {
     event.preventDefault();
     if (
-      currentFormat.name != "commander" ||
+      !(currentFormat.name == "commander" || currentFormat.name == "brawl") ||
       event.target.classList.contains("disabled")
     )
       return;
@@ -511,40 +497,49 @@ $(document).ready(() => {
       $(".commander-display-image").attr("data-name", card.name);
       $("#commander-info-container").removeClass("hidden");
     }
+    writeCardsLocalStorage();
     refreshSections();
   });
 
   $("#display-section").on("mousemove", (event) => {
     let dragImage = document.getElementById("drag-image");
-    if (
-      mouseDown &&
-      $(dragImage).hasClass("hidden") &&
-      Math.abs(event.clientX - dragStartX) > 3 &&
-      Math.abs(event.clientY - dragStartY) > 3
-    ) {
-      $(dragImage).removeClass("hidden");
-    }
 
-    if (mouseDown && !$(dragImage).hasClass("hidden")) {
-      let displaySection = document.getElementById("display-section");
-      let displayRect = displaySection.getBoundingClientRect();
-      let rect = dragImage.getBoundingClientRect();
-      let x = event.clientX - rect.width / 2;
-      let y = event.clientY - rect.height / 2;
-      x =
-        x < displayRect.left
-          ? displayRect.left
-          : x + rect.width - displayRect.left > displayRect.width
-            ? displayRect.width + displayRect.left - rect.width
-            : x;
-      y =
-        y < displayRect.top
-          ? displayRect.top
-          : y + rect.height - displayRect.top > displayRect.height
-            ? displayRect.height + displayRect.top - rect.height
-            : y;
-      $(dragImage).css("left", x + "px");
-      $(dragImage).css("top", y + "px");
+    if (mouseDown && grabbedImage != null && grabbedImage != undefined) {
+      $(grabbedImage).css(
+        "transform",
+        "translateY(" + (event.clientY - dragStartY) + "px)",
+      );
+      if (Math.abs(event.clientY - dragStartY) > 2) {
+        $(grabbedImage).removeClass("card-image-hover");
+        shifftedImage = true;
+      }
+
+      let top = grabbedImage.getBoundingClientRect().top;
+      let under = $(grabbedImage).parent().next().children().eq(1);
+      let over = $(grabbedImage).parent().prev().children().eq(1);
+      let underDiff =
+        under.length == 0
+          ? null
+          : Math.abs(top - under.get(0).getBoundingClientRect().top);
+      let overDiff =
+        over.length == 0
+          ? null
+          : Math.abs(top - over.get(0).getBoundingClientRect().top);
+
+      if (underDiff != null && underDiff < 17) {
+        under.parent().after($(grabbedImage).parent());
+        $(grabbedImage).css("transform", "translateY(-" + underDiff + "px)");
+        dragStartY = event.clientY + underDiff;
+        dragStartX = event.clientX;
+      } else if (overDiff != null && overDiff < 17) {
+        over.parent().before($(grabbedImage).parent());
+        $(grabbedImage).css(
+          "transform",
+          "translateY(" + 1.5 * overDiff + "px)",
+        );
+        dragStartY = event.clientY - overDiff;
+        dragStartX = event.clientX;
+      }
     }
   });
 
@@ -553,7 +548,9 @@ $(document).ready(() => {
     mouseDown = false;
     dragStartX = -100;
     dragStartY = -100;
-    $("#drag-image").addClass("hidden");
+    $(grabbedImage).css("transform", "translateY(0px)");
+    grabbedImage = null;
+    //$("#drag-image").addClass("hidden");
   });
 
   $(".commander-display-image").on("contextmenu", commanderContext);
@@ -574,15 +571,48 @@ $(document).ready(() => {
   });
 
   $(".dropdown-item,#main-section").click((event) => {
-    $("#dropdown-container").removeClass("focused");
+    if (
+      !$(event.target).hasClass("dropdown-side-view") &&
+      !$(event.target.parentNode).hasClass("dropdown-side-view")
+    )
+      $("#dropdown-container").removeClass("focused");
   });
 
   $(".dropdown-view").click((event) => dropdownViewToggle(event.target));
   $(".dropdown-view>i").click((event) =>
     dropdownViewToggle(event.target.parentNode),
   );
+
+  $(".dropdown-radio").on("click", (event) => {
+    event.preventDefault();
+    $(".dropdown-radio").each((i, obj) => {
+      $(obj).removeClass("radio-selected");
+    });
+    $(event.target).addClass("radio-selected");
+    $(event.target).parent().parent().removeClass("focused");
+
+    let value = parseInt($(event.target).attr("data-value"));
+    $(".display-column").each((i, obj) => {
+      if (i < value) $(obj).removeClass("hidden");
+      else $(obj).addClass("hidden");
+    });
+    refreshSections();
+    writeViewLocalStorage();
+  });
+
+  $(".dropdown-side-view").click((event) => {
+    if ($(event.target).hasClass("dropdown-side-view")) {
+      $(event.target).toggleClass("focused");
+      event.stopPropagation();
+    }
+  });
+
+  $(".dropdown-side-view>i").click((event) => {
+    $(event.target.parentNode).toggleClass("focused");
+    event.stopPropagation();
+  });
 });
-// ^ document).ready
+// ^ $(document).ready
 
 /**
  * Refreshes card image events.
@@ -598,7 +628,10 @@ function refreshEvents() {
       let rect = event.target.getBoundingClientRect();
       let y = event.clientY - rect.top;
       if (
-        (currentFormat.singleton ? y >= 35 : y >= 80) &&
+        ($(event.target.parentNode).hasClass("singleton-view") ||
+        $(".display-column").hasClass("collapsed-view")
+          ? y >= 39
+          : y >= 80) &&
         $(event.target).parent().next().length != 0
       ) {
         $(event.target).removeClass("card-image-hover");
@@ -608,7 +641,9 @@ function refreshEvents() {
 
   cardImages.on("mouseenter", (event) => {
     event.preventDefault();
-    $(event.target).addClass("card-image-hover");
+    if (grabbedImage == null) {
+      $(event.target).addClass("card-image-hover");
+    }
   });
 
   cardImages.on("mouseleave", (event) => {
@@ -616,8 +651,12 @@ function refreshEvents() {
     $(event.target).removeClass("card-image-hover");
   });
 
-  cardImages.on("click", (event) => {
+  cardImages.on("mouseup", (event) => {
     event.preventDefault();
+    if (shifftedImage) {
+      writeCardsLocalStorage();
+      return;
+    }
     if (event.target.id == "drag-image") return;
     let obj = $(event.target);
     let card = loadedCards.find(
@@ -628,6 +667,7 @@ function refreshEvents() {
     $(".card-viewer-count-input").val(card.count);
     $("#modal-section").removeClass("hidden");
     $("#card-viewer-container").removeClass("hidden");
+    mouseDown = false;
   });
 
   cardImages.on("contextmenu", (event) => {
@@ -666,12 +706,13 @@ function refreshEvents() {
   });
 
   cardImages.on("mousedown", (event) => {
-    console.log("drag start");
+    shifftedImage = false;
     if (!mouseDown) {
       mouseDown = true;
       dragStartX = event.clientX;
       dragStartY = event.clientY;
-      $("#drag-image").attr("src", $(event.target).attr("src"));
+      grabbedImage = event.target;
+      //$("#drag-image").attr("src", $(event.target).attr("src"));
     }
   });
 }
@@ -690,14 +731,14 @@ $(document).on("keydown", (event) => {
 
 function loadLocalStorage() {
   let cards = localStorage.getItem("cards");
-  let format = localStorage.getItem("format");
+  let info = localStorage.getItem("info");
   let view = localStorage.getItem("view");
   if (view != null && view != undefined) {
     view = JSON.parse(view);
     if (view.collapsed != null && view.collapsed == true) {
-      toggleInfoSection();
+      toggleInfoSection(false);
     }
-    if (view.card_headers != null && view.card_headers == false) {
+    if (view.card_headers != null && view.card_headers == true) {
       $(".card-type-title").addClass("hidden");
       let icon = $(".dropdown-view[data-element='card-type-title']>i");
       icon.removeClass("bxs-show");
@@ -709,22 +750,59 @@ function loadLocalStorage() {
       icon.removeClass("bxs-show");
       icon.addClass("bxs-hide");
     }
+    if (view.columns != null && view.columns != undefined) {
+      $(".dropdown-radio").each((i, obj) => {
+        $(obj).removeClass("radio-selected");
+      });
+      $(`.dropdown-radio[data-value="${view.columns}"]`).addClass(
+        "radio-selected",
+      );
+      $(".display-column").each((i, obj) => {
+        if (i < view.columns) $(obj).removeClass("hidden");
+        else $(obj).addClass("hidden");
+      });
+    }
   }
-  if (format != null && format != undefined) {
-    formatOption.value = format;
-    refreshDeckFormat();
+  if (info != null && info != undefined) {
+    info = JSON.parse(info);
+    if (info.format != null && info.format != undefined) {
+      formatOption.value = info.format;
+      refreshDeckFormat();
+    }
+    if (info.deck_name != null && info.deck_name != undefined)
+      $("#deck-name-input").val(info.deck_name);
+    if (info.description != null && info.description != undefined)
+      $("#description-input").val(info.description);
   }
   if (cards == null || cards == undefined) loadedCards = [];
   else {
+    //copyToClipboard(cards);
     loadedCards = JSON.parse(cards).list;
     for (let i = 0; i < loadedCards.length; i++) {
       $.ajax({
-        url: loadedCards[i].uri,
+        url: PROXY_ON ? pathToSelf(loadedCards[i].uri) : loadedCards[i].uri,
         type: "GET",
         success: function (res) {
           loadedCards[i] = { ...loadedCards[i], ...res };
-          console.log(loadedCards[i]);
-          addCard(loadedCards[i]);
+          if (
+            (currentFormat.name == "commander" ||
+              currentFormat.name == "brawler") &&
+            loadedCards[i].commander != null &&
+            loadedCards[i].commander != undefined &&
+            loadedCards[i].commander
+          ) {
+            $(".commander-display-image").attr(
+              "src",
+              loadedCards[i].image_uris.normal,
+            );
+            $(".commander-display-image").attr(
+              "data-name",
+              loadedCards[i].name,
+            );
+            $("#commander-info-container").removeClass("hidden");
+          } else {
+            addCard(loadedCards[i]);
+          }
           refreshDeckColors();
           refreshSections();
         },
@@ -738,12 +816,21 @@ function loadLocalStorage() {
 
 function writeAllLocalStorage() {
   writeCardsLocalStorage();
-  writeFormatLocalStorage();
+  writeInfoLocalStorage();
   writeViewLocalStorage();
 }
 
-function writeFormatLocalStorage() {
-  localStorage.setItem("format", currentFormat.name);
+function writeInfoLocalStorage() {
+  localStorage.setItem("info", JSON.stringify(getInfoStorageJSON()));
+}
+
+function getInfoStorageJSON() {
+  let json = {
+    format: currentFormat.name,
+    deck_name: $("#deck-name-input").val().trim(),
+    description: $("#description-input").val().trim(),
+  };
+  return json;
 }
 
 function writeViewLocalStorage() {
@@ -755,6 +842,11 @@ function getViewStorageJSON() {
     collapsed: $("#info-title").hasClass("hidden"),
     card_headers: $(".card-type-title").hasClass("hidden"),
     add_remove: $(".display-column").hasClass("collapsed-view"),
+    columns: parseInt(
+      $(
+        "#columns-dropdown>.dropdown-side-content>.dropdown-radio.radio-selected",
+      ).attr("data-value"),
+    ),
   };
   return json;
 }
@@ -786,6 +878,7 @@ function getCardStorageJSON() {
       addedCard.image_uris = card.image_uris;
       addedCard.color_identity = card.color_identity;
       addedCard.type_line = card.type_line;
+      addedCard.oracle_text = card.oracle_text;
       json.list.push(addedCard);
     }
   });
@@ -797,17 +890,6 @@ function getCardStorageJSON() {
  */
 function refreshDeckColors() {
   deckColors = [];
-  /*$(".card-container").each((i, obj) => {
-    let name = $(obj).attr("data-name");
-    let loadedCard = loadedCards.find((item) => item.name === name);
-    if (loadedCard && loadedCard.count > 0) {
-      for (let i = 0; i < loadedCard.color_identity.length; i++) {
-        if (!deckColors.find((item) => item == loadedCard.color_identity[i])) {
-          deckColors.push(loadedCard.color_identity[i]);
-        }
-      }
-    }
-  });*/
 
   loadedCards.forEach((card) => {
     if (card && card.count > 0) {
@@ -840,9 +922,14 @@ function refreshDeckColors() {
 function refreshDeckCardCount() {
   let total = 0;
   loadedCards.forEach((card) => {
+    let cardMax = cardCountMax(card);
     if (card.count > 0) {
       total +=
-        cardCountMax(card) == -1 || !currentFormat.singleton ? card.count : 1;
+        cardMax == -1
+          ? card.count
+          : card.count > cardMax
+            ? cardMax
+            : card.count;
     }
   });
   $("#card-count-info").text(total);
@@ -856,11 +943,13 @@ function refreshDeckFormat() {
   let formatName = $("#format-option").val().trim();
   currentFormat = findFormat(formatName);
   $("#format-collapsed-info").html(formatName.toUpperCase());
+  $("#count-max-info").text(currentFormat.size);
+  $("#collapsed-count-max-info").text(currentFormat.size);
   if (currentFormat.singleton) {
     $(".card-container").each((index, object) => {
       let card = findLoadedCard($(object).attr("data-name"));
       let max = cardCountMax(card);
-      if (max == -1) {
+      if (max == -1 || max > 1) {
         $(object)
           .find(".card-count-column>*:nth-child(n + 2)")
           .css("display", "none");
@@ -900,24 +989,32 @@ function refreshDeckFormat() {
       refreshSections();
     }
   }
-  writeFormatLocalStorage();
   refreshDeckCardCount();
 }
 
 function refreshSections() {
   let heights = [];
+  let actualHeightLength = 0;
   $(".display-column>*").each((i, obj) => {
     heights.push({ id: obj.id, height: obj.offsetHeight });
+    if ($(obj).children().length > 1) actualHeightLength++;
   });
 
-  let groups = [
-    { sections: [heights[0].id], total: heights[0].height },
-    { sections: [], total: 0 },
-    {
-      sections: [heights[heights.length - 1].id],
-      total: heights[heights.length - 1].height,
-    },
-  ];
+  let groups = [];
+  let len = Math.min(
+    actualHeightLength,
+    $(".display-column:not(.hidden)").length,
+  );
+  $(".display-column:not(.hidden)").each((i, obj) => {
+    if (i == 0)
+      groups.push({ sections: [heights[0].id], total: heights[0].height });
+    else if (i == len - 1)
+      groups.push({
+        sections: [heights[heights.length - 1].id],
+        total: heights[heights.length - 1].height,
+      });
+    else groups.push({ sections: [], total: 0 });
+  });
   heights = heights.splice(1, heights.length - 2);
   heights = heights.sort((a, b) => b.height - a.height);
   for (let i = 0; i < heights.length; i++) {
@@ -925,11 +1022,11 @@ function refreshSections() {
     for (let j = 1; j < groups.length; j++) {
       if (groups[j].total < groups[min].total) min = j;
     }
-    if (min < 2) groups[min].sections.push(heights[i].id);
+    if (min < groups.length - 1) groups[min].sections.push(heights[i].id);
     else groups[min].sections.unshift(heights[i].id);
     groups[min].total += heights[i].height;
   }
-  $(".display-column").each((index, obj) => {
+  $(".display-column:not(.hidden)").each((index, obj) => {
     for (let i = 0; i < groups[index].sections.length; i++) {
       obj.appendChild(document.getElementById(groups[index].sections[i]));
     }
@@ -955,24 +1052,40 @@ function dropdownViewToggle(el) {
     $(icon).toggleClass("bxs-hide");
     $(element).toggleClass($(el).attr("data-value"));
   }
+  writeViewLocalStorage();
 }
 
 /**
  * Returns the maximum amount of cards legal in current deck format, or -1 if there is no limit.
  * @param {object} card loaded card object
+ * @param {boolean} legality whether to use the legality of the card in the current format (default <code>true</code>)
  * @returns integer
  */
 function cardCountMax(card, legality = true) {
   if (card == null || card == undefined) return -1;
+  if (card.name == null || card.name == undefined) return -1;
   let name = card.name.toLowerCase();
   if (
     name == "mountain" ||
     name == "plains" ||
     name == "forest" ||
     name == "swamp" ||
-    name == "island"
+    name == "island" ||
+    (card.oracle_text != null &&
+      card.oracle_text != undefined &&
+      card.oracle_text.includes(
+        "A deck can have any number of cards named " + card.name,
+      ))
   )
     return -1;
+  if (card.oracle_text != null || card.oracle_text != undefined) {
+    let maxReg = new RegExp(
+      "A deck can have up to ([a-zA-z]+) cards named " + card.name,
+      "i",
+    );
+    let maxMatch = card.oracle_text.match(maxReg);
+    if (maxMatch != null) return numberStringMap.get(maxMatch[1].toLowerCase());
+  }
   return legality && currentFormat.singleton ? 1 : 4;
 }
 
@@ -986,12 +1099,12 @@ function sortColorArray(arr) {
 /**
  * Toggles collapsable info section.
  */
-function toggleInfoSection() {
+function toggleInfoSection(writeLocal = true) {
   $("#info-title").toggleClass("hidden");
   $("#info-form").toggleClass("hidden");
   $("#collapsed-info").toggleClass("hidden");
   $("#info-section").toggleClass("info-section-collapsed");
-  writeViewLocalStorage();
+  if (writeLocal) writeViewLocalStorage();
 }
 
 /**
@@ -1017,9 +1130,9 @@ function commanderContext(event) {
  */
 function addCard(card) {
   let cardAdded =
-    $(`<div class="card-container" data-count="4" data-name="${card.name}" data-scryfall="${card.uri}">
+    $(`<div class="card-container" data-count="${card.count}" data-name="${card.name}" data-scryfall="${card.uri}">
   <div class="card-count-column">
-    <div class="card-count">&times;<span class="count-span">4</span></div>
+    <div class="card-count">&times;<span class="count-span">${card.count}</span></div>
     <div class="card-count-add card-count-btn">&plus;</div>
     <div class="card-count-remove card-count-btn">&minus;</div>
   </div>
@@ -1049,6 +1162,28 @@ function addCard(card) {
     $("#land-display-container").removeClass("hidden");
     $("#land-display-container").append(cardAdded);
   }
+
+  $(
+    `.card-container[data-name="${card.name}"]>.card-count-column>.card-count-btn`,
+  ).on("click", (event) => {
+    event.preventDefault();
+    let obj = $(event.target);
+    let card = loadedCards.find(
+      (item) => item.name == obj.parent().parent().attr("data-name"),
+    );
+    let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
+    let cardMax = cardCountMax(card, false);
+    if (updatedCount <= 0) {
+      card.count = 0;
+      removeCard(card);
+      refreshDeckColors();
+      refreshSections();
+    } else if (updatedCount <= cardMax || cardMax == -1) {
+      card.count = updatedCount;
+      obj.parent().find("span.count-span").html(updatedCount);
+    }
+    refreshDeckCardCount();
+  });
 
   refreshDeckFormat();
   refreshEvents();
@@ -1086,4 +1221,10 @@ function findLoadedCard(name) {
 function findFormat(name) {
   name = name.toLowerCase();
   return formats.find((item) => item.name == name);
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).catch((err) => {
+    console.error("Failed to copy text: ", err);
+  });
 }

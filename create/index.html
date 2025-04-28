@@ -32,6 +32,16 @@
           <div class="dropdown-content">
             <div class="dropdown-item dropdown-view" data-type='class' data-element='card-type-title'>Headers<i class="bx bxs-show"></i></div>
             <div class="dropdown-item dropdown-view" data-type='toggle' data-element='.display-column' data-value='collapsed-view'>Add/Remove<i class="bx bxs-show"></i></div>
+            <div id="columns-dropdown" class="dropdown-item dropdown-side-view">
+              Columns
+              <i class="bx bx-chevron-right"></i>
+              <div class="dropdown-content dropdown-side-content">
+                <div class="dropdown-item dropdown-radio radio-selected" data-value="3"><i class="bx bxs-circle"></i>3</div>
+                <div class="dropdown-item dropdown-radio" data-value="4"><i class="bx bxs-circle"></i>4</div>
+                <div class="dropdown-item dropdown-radio" data-value="5"><i class="bx bxs-circle"></i>5</div>
+                <div class="dropdown-item dropdown-radio" data-value="6"><i class="bx bxs-circle"></i>6</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -100,7 +110,7 @@
         <!-- this is all test html-->
         <div id="card-display-container">
           <div id="display-flex">
-            <div id="display-column-left" class="display-column">
+            <div id="display-column-0" class="display-column">
               <div id="commander-info-container" class="hidden clearfix">
                 <img src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066" alt="Commander" class="commander-display-image" data-name="Aurelia, the Warleader">
                 <h1 id="commander-header">COMMANDER</h1>
@@ -138,7 +148,7 @@
               </div>
             </div>
 
-            <div id="display-column-center" class="display-column">
+            <div id="display-column-1" class="display-column">
               <div
                 id="artifact-display-container"
                 class="card-type-container hidden clearfix"
@@ -161,7 +171,7 @@
               </div>
             </div>
 
-            <div id="display-column-right" class="display-column">
+            <div id="display-column-2" class="display-column">
               <div
                 id="sorcery-display-container"
                 class="card-type-container hidden clearfix"
@@ -176,8 +186,14 @@
                 <h1 class="card-type-title">LANDS</h1>
               </div>
             </div>
+
+            <div id="display-column-3" class="display-column hidden"></div>
+            <div id="display-column-4" class="display-column hidden"></div>
+            <div id="display-column-5" class="display-column hidden"></div>
           </div>
         </div>
+
+            
 
         <img id="drag-image" class="card-image hidden"></img>
 

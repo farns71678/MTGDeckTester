@@ -36,15 +36,14 @@ const scryfallImageProxy = proxy("https://cards.scryfall.io/", {
   proxyReqPathResolver: (req) => url.parse(req.baseUrl).path,
 });
 
-const scryfallSearchProxy = proxy("https://api.scryfall.com/", {
-  proxyReqPathResolver: (req) =>
-    url.parse(req.baseUrl).path + url.parse(req.baseUrl).search,
+const scryfallCardProxy = proxy("https://api.scryfall.com/", {
+  proxyReqPathResolver: (req) => url.parse(req.baseUrl).path,
 });
 
 app.use("/png/*", scryfallImageProxy);
 app.use("/normal/*", scryfallImageProxy);
 
-app.use("/cards/search", scryfallSearchProxy);
+app.use("/cards/*", scryfallCardProxy);
 
 app.use(
   "/search",
