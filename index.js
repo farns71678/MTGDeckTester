@@ -24,6 +24,10 @@ app.get("/create/styles.css", (req, res) => {
   res.sendFile(__dirname + "/create/styles.css");
 });
 
+app.get("/create/storage.json", (req, res) => {
+  res.sendFile(__dirname + "/create/storage.json");
+});
+
 app.get("/decks", (req, res) => {
   res.send("My decks");
 });

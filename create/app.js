@@ -3,6 +3,7 @@ let cardContainer = document.querySelector(
   "#card-display-container>#display-flex",
 );
 let searchBar = document.getElementById("search-input");
+let scryfallBar = document.getElementById("scryfall-input");
 let formats = [
   { name: "standard", singleton: false, size: 60 },
   { name: "modern", singleton: false, size: 60 },
@@ -22,142 +23,7 @@ const PROXY_ON = false;
 
 //console.log(rules[rules.length - 1]);
 
-let loadedCards = [
-  /*{
-    object: "card",
-    id: "bc6ffc1c-575b-4116-83c9-d13b29886c35",
-    oracle_id: "0f5a3a09-2f07-4774-9e0f-e99d9a444166",
-    multiverse_ids: [680790],
-    arena_id: 94079,
-    tcgplayer_id: 591055,
-    name: "Aurelia, the Warleader",
-    count: 4,
-    commander: true,
-    lang: "en",
-    released_at: "2024-11-15",
-    uri: "https://api.scryfall.com/cards/bc6ffc1c-575b-4116-83c9-d13b29886c35",
-    scryfall_uri:
-      "https://scryfall.com/card/fdn/651/aurelia-the-warleader?utm_source=api",
-    layout: "normal",
-    highres_image: true,
-    image_status: "highres_scan",
-    image_uris: {
-      small:
-        "https://cards.scryfall.io/small/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066",
-      normal:
-        "https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066",
-      large:
-        "https://cards.scryfall.io/large/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066",
-      png: "https://cards.scryfall.io/png/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.png?1730491066",
-      art_crop:
-        "https://cards.scryfall.io/art_crop/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066",
-      border_crop:
-        "https://cards.scryfall.io/border_crop/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066",
-    },
-    mana_cost: "{2}{R}{R}{W}{W}",
-    cmc: 6.0,
-    type_line: "Legendary Creature — Angel",
-    oracle_text:
-      "Flying, vigilance, haste\nWhenever Aurelia attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase.",
-    power: "3",
-    toughness: "4",
-    colors: ["R", "W"],
-    color_identity: ["R", "W"],
-    keywords: ["Flying", "Vigilance", "Haste"],
-    legalities: {
-      standard: "legal",
-      future: "legal",
-      historic: "legal",
-      timeless: "legal",
-      gladiator: "legal",
-      pioneer: "legal",
-      explorer: "legal",
-      modern: "legal",
-      legacy: "legal",
-      pauper: "not_legal",
-      vintage: "legal",
-      penny: "legal",
-      commander: "legal",
-      oathbreaker: "legal",
-      standardbrawl: "legal",
-      brawl: "legal",
-      alchemy: "legal",
-      paupercommander: "not_legal",
-      duel: "legal",
-      oldschool: "not_legal",
-      premodern: "not_legal",
-      predh: "not_legal",
-    },
-    games: ["paper", "arena", "mtgo"],
-    reserved: false,
-    game_changer: false,
-    foil: false,
-    nonfoil: true,
-    finishes: ["nonfoil"],
-    oversized: false,
-    promo: false,
-    reprint: true,
-    variation: false,
-    set_id: "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
-    set: "fdn",
-    set_name: "Foundations",
-    set_type: "core",
-    set_uri:
-      "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
-    set_search_uri:
-      "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
-    scryfall_set_uri: "https://scryfall.com/sets/fdn?utm_source=api",
-    rulings_uri:
-      "https://api.scryfall.com/cards/bc6ffc1c-575b-4116-83c9-d13b29886c35/rulings",
-    prints_search_uri:
-      "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0f5a3a09-2f07-4774-9e0f-e99d9a444166&unique=prints",
-    collector_number: "651",
-    digital: false,
-    rarity: "mythic",
-    flavor_text:
-      "Where Razia was aloof and untouchable, Aurelia is on the frontlines, calling for war.",
-    card_back_id: "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
-    artist: "Slawomir Maniak",
-    artist_ids: ["d887bc66-2779-416c-a1ff-d8720242063e"],
-    illustration_id: "edc12370-7de5-4bdc-9313-afdbe13c8461",
-    border_color: "black",
-    frame: "2015",
-    frame_effects: ["legendary"],
-    security_stamp: "oval",
-    full_art: false,
-    textless: false,
-    booster: false,
-    story_spotlight: false,
-    promo_types: ["startercollection"],
-    edhrec_rank: 865,
-    penny_rank: 2685,
-    prices: {
-      usd: "5.07",
-      usd_foil: null,
-      usd_etched: null,
-      eur: null,
-      eur_foil: null,
-      tix: null,
-    },
-    related_uris: {
-      gatherer:
-        "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=680790&printed=false",
-      tcgplayer_infinite_articles:
-        "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=infinite&u=https%3A%2F%2Finfinite.tcgplayer.com%2Fsearch%3FcontentMode%3Darticle%26game%3Dmagic%26q%3DAurelia%252C%2Bthe%2BWarleader",
-      tcgplayer_infinite_decks:
-        "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=infinite&u=https%3A%2F%2Finfinite.tcgplayer.com%2Fsearch%3FcontentMode%3Ddeck%26game%3Dmagic%26q%3DAurelia%252C%2Bthe%2BWarleader",
-      edhrec: "https://edhrec.com/route/?cc=Aurelia%2C+the+Warleader",
-    },
-    purchase_uris: {
-      tcgplayer:
-        "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591055%3Fpage%3D1",
-      cardmarket:
-        "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Aurelia%2C+the+Warleader&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-      cardhoarder:
-        "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Aurelia%2C+the+Warleader&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
-    },
-  },*/
-];
+let loadedCards = [];
 
 let deckColors = [];
 let colorData = new Map();
@@ -526,12 +392,14 @@ $(document).ready(() => {
           ? null
           : Math.abs(top - over.get(0).getBoundingClientRect().top);
 
-      if (underDiff != null && underDiff < 17) {
+      let collapsed = $(grabbedImage).parent().parent().parent().hasClass("collapsed-view") || 
+                      $(grabbedImage).parent().hasClass("singleton-view");
+      if (underDiff != null && ((collapsed && underDiff < 17) || (!collapsed && underDiff < 41))) {
         under.parent().after($(grabbedImage).parent());
         $(grabbedImage).css("transform", "translateY(-" + underDiff + "px)");
         dragStartY = event.clientY + underDiff;
         dragStartX = event.clientX;
-      } else if (overDiff != null && overDiff < 17) {
+      } else if (overDiff != null && ((collapsed && overDiff < 17) || (!collapsed && overDiff < 41))) {
         over.parent().before($(grabbedImage).parent());
         $(grabbedImage).css(
           "transform",
@@ -611,6 +479,49 @@ $(document).ready(() => {
     $(event.target.parentNode).toggleClass("focused");
     event.stopPropagation();
   });
+
+  $(searchBar).on("focus", () => {
+    scryfallBar.textContent = "";
+  });
+
+  $(searchBar).on("input", (event) => {
+    let value = searchBar.value;
+    if (value.length > 0 && value[0] == "\\")  {
+      let pos = searchBar.selectionStart;
+      scryfallBar.textContent = value;
+      searchBar.value = "";
+      let setpos = document.createRange();
+      let set = window.getSelection();
+      setpos.setStart(scryfallBar.childNodes[0], pos);
+      setpos.collapse(true);
+      set.removeAllRanges();
+      set.addRange(setpos);
+      scryfallBar.focus();
+    }
+  });
+
+  $(scryfallBar).on("input", (event) => {
+    let content = scryfallBar.textContent;
+    if (content.length == 0) {
+      searchBar.value = "";
+      searchBar.focus();
+      return;
+    }
+    else if (content[0] != "\\") {
+      searchBar.value = content;
+      let pos = getCursorPosition(scryfallBar);
+      if (pos != null) {
+        searchBar.setSelectionRange(pos, pos);
+      }
+      searchBar.focus();
+      return;
+    }
+    else {
+      let pos = getCursorPosition(scryfallBar);
+      scryfallBar.innerHTML = hylightScryfall(content);
+      setCursorPosEditable(scryfallBar, pos);
+    }
+  });
 });
 // ^ $(document).ready
 
@@ -651,7 +562,7 @@ function refreshEvents() {
     $(event.target).removeClass("card-image-hover");
   });
 
-  cardImages.on("mouseup", (event) => {
+  cardImages.on("click", (event) => {
     event.preventDefault();
     if (shifftedImage) {
       writeCardsLocalStorage();
@@ -719,15 +630,196 @@ function refreshEvents() {
 
 $(document).on("keydown", (event) => {
   // select search bar
-  if (
-    (event.key == "/" || event.key == "\\") &&
-    searchBar != document.activeElement
-  ) {
+  let active = document.activeElement;
+  let scryfallContent = scryfallBar.textContent.trimStart();
+  if (event.key == "/" && active.tagName.toLowerCase() != "input" && scryfallBar != active) {
     $(searchBar).focus();
     searchBar.select();
-    if (event.key != "\\" || searchBar.value.trim() != "") return false;
+    scryfallContent = "";
+    return false;
+  }
+  if (event.key == "\\" && active.tagName.toLowerCase() != "input" && active.id != "scryfall-input") {
+    searchBar.value = "";
+    if (scryfallContent != "") {
+      setCursorPosEditable(scryfallBar, scryfallContent.length);
+      $(scryfallBar).focus();
+      return false;
+    }
+    $(scryfallBar).focus();
+  }
+  if (event.key == "\n" && active.id == "scryfall-input") {
+    return false;
   }
 });
+
+
+// potential colors: #246782, #a71f2a, #521987, #47553c
+// at 80 luminosity: #39A2CC, #CC2735, #7C27CC, #AACC91
+// at 100 llumen:    #47CBFF, #FF3042, #9B30FF, #D5FFB5
+
+/**
+ * Converts a scryfall search string into syntax highlighted HTML. 
+ * @param {string} search The scryfall search string. 
+ */
+function hylightScryfall(search) {
+  const syntaxType = {
+    any: 0,
+    key: 1,
+    value: 2,
+    kmod: 3,
+    vmod: 4,
+    quote: 5,
+    int: 6,
+    regex: 7
+  };
+  let colors = [
+    "#47CBFF", // key
+    "#DBE0ED", // modifier (ex: ':', '>', '=' ...)
+    "#FF874D", // value-regular
+    "#AACC91", // value-quote
+    "#9013ED", // value-number
+    "#C49FFF"  // regex
+  ];
+  let ret = "\\";
+  let lastChar = "\\";
+  let lastType = syntaxType.any;
+  let closed = true;
+  let index = 1;
+  while (index < search.length) {
+    let char = search[index];
+    if (isAlpha(char)) {
+      if (!closed) ret += char;
+      else {
+        if (lastType == syntaxType.regex) {
+          ret += `<span style="color: ${colors[5]}">${char}</span>`;
+        }
+        else if (lastType == syntaxType.kmod || lastType == syntaxType.any) {
+          closed = false;
+          lastType = syntaxType.key;
+          ret += `<span style="color: ${colors[0]}">${char}`;
+        }
+        else {
+          closed = false;
+          lastType = syntaxType.value;
+          ret += `<span style="color: ${colors[2]}">${char}`;
+        }
+      }
+    }
+    else if (char == '-') {
+      if (!closed) ret += char;
+      else {
+        lastType = syntaxType.kmod;
+        ret += char;
+      }
+    }
+    else if (char == '!' || char == '>' || char == '<' || char == '=' || char == ':') {
+      if (!closed) {
+        if (lastType == syntaxType.key) {
+          closed = true;
+          lastType = syntaxType.vmod;
+          ret += "</span>" + char;
+        }
+        else ret += char;
+      }
+      else {
+        ret += char;
+        lastType = syntaxType.vmod;
+      }
+    }
+    else if (char == '"') {
+      if (!closed) {
+        if (lastType == syntaxType.regex || (lastType == syntaxType.quote && lastChar == "\\")) {
+          ret += char;
+        }
+        else if (lastType == syntaxType.quote) {
+          closed = true;
+          ret += '"</span>';
+        }
+        else {
+          closed = false;
+          lastType = syntaxType.quote;
+          ret += `</span><span style="color: ${colors[3]}">"`;
+        }
+      }
+      else {
+        if (lastType == syntaxType.regex) ret += char;
+        else {
+          closed = false;
+          lastType = syntaxType.quote;
+          ret += `</span><span style="color: ${colors[3]}">"`;
+        }
+      }
+    }
+    else if (char == '/') {
+      if (!closed) {
+        if (lastType == syntaxType.regex && lastChar != "\\") {
+          closed = true;
+          ret += "/</span>";
+        }
+        else ret += char;
+      }
+      else {
+        if (lastType == syntaxType.vmod) {
+          closed = false;
+          lastType = syntaxType.regex;
+          ret += `<span style="color: ${colors[5]}">/`;
+        }
+        else ret += char;
+      }
+    }
+    else if (char.trim().length == 0) {
+      if (!closed) {
+        if (lastType == syntaxType.quote || lastType == syntaxType.regex) ret += char;
+        else {
+          closed = true;
+          lastType = syntaxType.any;
+          ret += `</span><span style='color: ${colors[1]};'> </span>`;
+        }
+      }
+      else {
+        lastType = syntaxType.any;
+        ret += `<span style='color: ${colors[1]};'> </span>`;
+      }
+    }
+    else if (char == '(' || char == ')') {
+      if (closed) {
+        lastType = syntaxType.any;
+        ret += char;
+      }
+      else {
+        if (lastType == syntaxType.quote || lastType == syntaxType.regex) ret += char;
+        else {
+          closed = true;
+          lastType = syntaxType.any;
+          ret += `</span>${char}`;
+        }
+      }
+    }
+    else {
+      if (closed && lastType == syntaxType.vmod) {
+        closed = false;
+        lastType = syntaxType.value;
+        ret += `<span style="color: ${colors[2]}">${char}`;
+      }
+      else ret += char;
+    }
+    
+
+    lastChar = char;
+    index++;
+  }
+  if (!closed) ret += "</span>";
+  return ret;
+}
+
+function isAlpha(char) {
+  const code = char.charCodeAt(0);
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+function isDigit(char) {
+  return char >= '0' && char <= '9';
+}
 
 function loadLocalStorage() {
   let cards = localStorage.getItem("cards");
@@ -774,10 +866,34 @@ function loadLocalStorage() {
     if (info.description != null && info.description != undefined)
       $("#description-input").val(info.description);
   }
-  if (cards == null || cards == undefined) loadedCards = [];
+  if (cards == null || cards == undefined) {
+    loadedCards = [];
+    $.ajax({
+      url: "../create/storage.json",
+      type: "GET",
+      success: (res) => {
+        loadedCards = res.list;
+        writeCardsLocalStorage();
+        loadedCards.forEach((card) => {
+          addCard(card);
+        });
+        refreshDeckFormat();
+        refreshSections();
+        refreshDeckColors();
+        refreshEvents();
+      },
+      error: (xhr) => {
+        alert("There was an error with your request (" +
+            xhr.status +
+            "): " +
+            xhr.responseText);
+      }
+    });
+  }
   else {
     //copyToClipboard(cards);
     loadedCards = JSON.parse(cards).list;
+    console.log(loadedCards);
     for (let i = 0; i < loadedCards.length; i++) {
       $.ajax({
         url: PROXY_ON ? pathToSelf(loadedCards[i].uri) : loadedCards[i].uri,
@@ -808,7 +924,28 @@ function loadLocalStorage() {
         },
         error: function (err) {
           console.log(err);
-        },
+          if (
+            (currentFormat.name == "commander" ||
+              currentFormat.name == "brawler") &&
+            loadedCards[i].commander != null &&
+            loadedCards[i].commander != undefined &&
+            loadedCards[i].commander
+          ) {
+            $(".commander-display-image").attr(
+              "src",
+              loadedCards[i].image_uris.normal,
+            );
+            $(".commander-display-image").attr(
+              "data-name",
+              loadedCards[i].name,
+            );
+            $("#commander-info-container").removeClass("hidden");
+          } else {
+            addCard(loadedCards[i]);
+          }
+          refreshDeckColors();
+          refreshSections();
+        }
       });
     }
   }
@@ -1227,4 +1364,52 @@ function copyToClipboard(text) {
   navigator.clipboard.writeText(text).catch((err) => {
     console.error("Failed to copy text: ", err);
   });
+}
+
+function getCursorPosition(node) {
+  const selection = window.getSelection();
+  const range = selection.getRangeAt(0);
+  const clonedRange = range.cloneRange();
+  clonedRange.selectNodeContents(node);
+  clonedRange.setEnd(range.endContainer, range.endOffset);
+ return clonedRange.toString().length;
+}
+
+function createRange(node, targetPosition) {
+  let range = document.createRange();
+  range.selectNode(node);
+  //range.setStart(node, 0);
+
+  let pos = 0;
+  const stack = [node];
+  while (stack.length > 0) {
+      const current = stack.pop();
+
+      if (current.nodeType === Node.TEXT_NODE) {
+          const len = current.textContent.length;
+          if (pos + len >= targetPosition) {
+              range.setStart(current, targetPosition - pos);
+              return range;
+          }
+          pos += len;
+      } else if (current.childNodes && current.childNodes.length > 0) {
+          for (let i = current.childNodes.length - 1; i >= 0; i--) {
+              stack.push(current.childNodes[i]);
+          }
+      }
+  }
+
+  // The target position is greater than the
+  // length of the contenteditable element.
+  range.setStart(node, node.childNodes.length);
+  return range;
+};
+
+
+function setCursorPosEditable(node, pos) {
+  let set = window.getSelection();
+  let setpos = createRange(node, pos);
+  setpos.collapse(true);
+  set.removeAllRanges();
+  set.addRange(setpos);
 }

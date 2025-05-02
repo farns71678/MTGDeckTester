@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.cdnfonts.com/css/liberation-mono');
 
 .material-symbols-outlined {
   font-variation-settings:
@@ -626,8 +627,29 @@ textarea {
   flex-direction: column;
 }
 
-#search-input {
+#search-input, #scryfall-input {
   width: 264px;
+  font-size: 10pt;
+}
+
+#scryfall-input {
+  font-size: 11pt;
+  color: #777;
+  white-space: pre;
+  overflow-x: scroll;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+#scryfall-input::-webkit-scrollbar {
+  height: 0px;
+}
+
+#scryfall-input>* {
+  font-family: inherit;
+}
+
+#scryfall-input:focus {
+  color: #ddd;
 }
 
 #search-err {
@@ -852,7 +874,7 @@ textarea {
 }
 
 @media only screen and (max-width: 1000px) {
-  #search-input {
+  #search-input, #scryfall-input {
     width: 231px;
   }
 
@@ -868,7 +890,7 @@ textarea {
 }
 
 @media only screen and (max-width: 600px) {
-  #search-input {
+  #search-input, #scryfall-input {
     width: 198px;
   }
 

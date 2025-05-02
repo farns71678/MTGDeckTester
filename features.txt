@@ -1,0 +1,33 @@
+Features to Add
+---------------
+ - Add personal collection page
+ - Create decks by personal collection
+ - Sort personal collection page
+ + Swapped search bar
+ + Syntax-highlighted Scryfall search
+ - Intellisense for Scryfall search
+ + Add partner functionality
+ * Format-specific error checking
+ * Card-specific error checking
+ + Auto-fit card columns
+ - Deck list page
+ - Deck tester page
+ - Dedicated, search modal section
+ - Consistent color scheme, font, and overall theme
+ - Add backend storage for decks
+ - Add backend for user account
+ - Add user create account page
+ - Sign in page
+ - Profile page
+ - Share deck links/display page
+ - Private/Public deck options
+ - Create page audio
+
+
+
+
+Bug Fixes
+---------
+ - Land column not always last
+ - Cards can go way past the card section when swapping
+ - Upload cards with malformed data
