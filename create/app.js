@@ -690,7 +690,13 @@ function hylightScryfall(search) {
     if (isAlpha(char)) {
       if (!closed) ret += char;
       else {
-        if (lastType == syntaxType.regex) {
+        if (char.toLowerCase() == 'o' && lastChar == ' ' && index <= search.length - 3 && search[index + 1].toLowerCase() == 'r' && search[index + 2] == ' ') {
+          ret += char + search[index + 1];
+          index += 2;
+          lastChar == 'r';
+          continue;
+        }
+        else if (lastType == syntaxType.regex) {
           ret += `<span style="color: ${colors[5]}">${char}</span>`;
         }
         else if (lastType == syntaxType.kmod || lastType == syntaxType.any) {
@@ -917,6 +923,7 @@ function loadLocalStorage() {
             );
             $("#commander-info-container").removeClass("hidden");
           } else {
+            console.log(loadedCards[i].name);
             addCard(loadedCards[i]);
           }
           refreshDeckColors();
@@ -1134,15 +1141,22 @@ function refreshSections() {
   let actualHeightLength = 0;
   $(".display-column>*").each((i, obj) => {
     heights.push({ id: obj.id, height: obj.offsetHeight });
-    if ($(obj).children().length > 1) actualHeightLength++;
+    if (obj.id == "commander-info-container") actualHeightLength += ($(obj).hasClass("hidden") ? 0 : 1);
+    else if ($(obj).children().length > 1) actualHeightLength++;
   });
 
+  let str = "";
+  heights.forEach((height) => {
+    str += height.id + ",";
+  });
   let groups = [];
-  let len = Math.min(
+  let len = Math.max(3, Math.min(
     actualHeightLength,
     $(".display-column:not(.hidden)").length,
-  );
-  $(".display-column:not(.hidden)").each((i, obj) => {
+  ));
+  //console.log(actualHeightLength);
+  let columns = $(".display-column:not(.hidden)");
+  for (let i = 0; i < len; i++) {
     if (i == 0)
       groups.push({ sections: [heights[0].id], total: heights[0].height });
     else if (i == len - 1)
@@ -1151,7 +1165,7 @@ function refreshSections() {
         total: heights[heights.length - 1].height,
       });
     else groups.push({ sections: [], total: 0 });
-  });
+  }
   heights = heights.splice(1, heights.length - 2);
   heights = heights.sort((a, b) => b.height - a.height);
   for (let i = 0; i < heights.length; i++) {
@@ -1163,7 +1177,7 @@ function refreshSections() {
     else groups[min].sections.unshift(heights[i].id);
     groups[min].total += heights[i].height;
   }
-  $(".display-column:not(.hidden)").each((index, obj) => {
+  columns.each((index, obj) => {
     for (let i = 0; i < groups[index].sections.length; i++) {
       obj.appendChild(document.getElementById(groups[index].sections[i]));
     }
@@ -1378,7 +1392,6 @@ function getCursorPosition(node) {
 function createRange(node, targetPosition) {
   let range = document.createRange();
   range.selectNode(node);
-  //range.setStart(node, 0);
 
   let pos = 0;
   const stack = [node];
@@ -1399,8 +1412,6 @@ function createRange(node, targetPosition) {
       }
   }
 
-  // The target position is greater than the
-  // length of the contenteditable element.
   range.setStart(node, node.childNodes.length);
   return range;
 };
