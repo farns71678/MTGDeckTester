@@ -4,7 +4,7 @@ Features to Add
  - Create decks by personal collection
  - Sort personal collection page
  + Swapped search bar
- + Syntax-highlighted Scryfall search
+ # Syntax-highlighted Scryfall search
  - Intellisense for Scryfall search
  + Add partner functionality
  * Format-specific error checking
@@ -28,6 +28,9 @@ Features to Add
 
 Bug Fixes
 ---------
- - Land column not always last
+ # Land column not always last
+ # Glichy card swapping
+ # Search Section collapsing when inspecting
  - Cards can go way past the card section when swapping
  - Upload cards with malformed data
+ - Count 0 when only commander local storage uploaded

@@ -214,6 +214,7 @@ nav {
   min-width: 200px;
   background-color: #111;
   padding: 4px;
+  flex-shrink: 0;
 }
 
 #info-section.info-section-collapsed {
@@ -324,12 +325,25 @@ h2 {
   background-color: rgba(0, 0, 0, 0.8);
 }
 
+#commander-flex {
+  display: flex;
+}
+
 .commander-display-image {
   width: 231px;
   border-radius: 10px;
   cursor: pointer;
+  z-index: 0;
   /*transition: translate 0.1s ease-out, box-shadow 0.1s ease-out;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);*/
+}
+
+.commander-display-image:nth-child(2) {
+  margin-left: -200px;
+}
+
+.partner-top {
+  z-index: 1;
 }
 
 #commander-header {
@@ -625,6 +639,8 @@ textarea {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  max-width: 278px;
 }
 
 #search-input, #scryfall-input {
@@ -903,6 +919,10 @@ textarea {
   .commander-display-image {
     width: 198px;
     border-radius: 8px;
+  }
+
+  .commander-display-image:nth-child(2) {
+    margin-left: -174px;
   }
 
   .card-count-column {

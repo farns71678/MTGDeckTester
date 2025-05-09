@@ -112,7 +112,10 @@
           <div id="display-flex">
             <div id="display-column-0" class="display-column">
               <div id="commander-info-container" class="hidden clearfix">
-                <img src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066" alt="Commander" class="commander-display-image" data-name="Aurelia, the Warleader">
+                <div id="commander-flex">
+                  <img src="https://cards.scryfall.io/normal/front/7/5/755cf134-e91e-4aa4-be44-b7a53a7f9e20.jpg?1743207218" alt="Commander" class="commander-display-image" data-name="Sidar Kondo of Jamuraa" data-order="0">
+                  <img src="https://cards.scryfall.io/normal/front/a/6/a6fd7a8c-e0cd-4fb5-b492-8f3ef7579682.jpg?1743206070" alt="Partner" class="commander-display-image hidden" data-name="Ikra Shidiqi, the Usurper" data-order="1">
+                </div>
                 <h1 id="commander-header">COMMANDER</h1>
               </div>
               <div
@@ -208,6 +211,7 @@
             <div id="image-menu-commander" class="image-menu-item context-menu-item">
               Set As Commander
             </div>
+            <div id="image-menu-partner" class="image-menu-item context-menu-item">Add As Partner</div>
           </div>
           <div id="commander-menu" class="context-menu">
             <div id="commander-menu-remove" class="context-menu-item">Remove</div>
@@ -219,14 +223,9 @@
       <div id="search-section">
         <h2>CARD SEARCH</h2>
         <form id="search-form">
-          <input
-            type="text"
-            class="info-input"
-            id="search-input"
-            placeholder="Card Search"
-          />
           <div id="scryfall-input" class="info-input" contenteditable="true" spellcheck="false"></div>
-          <div id="search-err"></div>
+          <input type="submit" id="search-submit" value="Search" class="hidden">
+          <p id="search-err"></p>
         </form>
         <!--searching animation-->
         <div id="search-loading-container" class="hidden">

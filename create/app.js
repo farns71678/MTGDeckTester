@@ -4,6 +4,7 @@ let cardContainer = document.querySelector(
 );
 let searchBar = document.getElementById("search-input");
 let scryfallBar = document.getElementById("scryfall-input");
+let commanderImages = document.querySelectorAll(".commander-display-image");
 let formats = [
   { name: "standard", singleton: false, size: 60 },
   { name: "modern", singleton: false, size: 60 },
@@ -95,8 +96,8 @@ $(".card-container").each((indexed, obj) => {
 
 $("#search-form").submit(function (event) {
   event.preventDefault();
-  let searchInput = $("#search-input").val().trim();
-  if (searchInput == "") return;
+  let searchInput = (scryfallBar.textContent.length > 0 ? scryfallBar.textContent : $(searchBar).val().trim());
+  if (searchInput == "" || searchInput == "\\") return;
   $("#search-err").text("");
   $(".search-card").remove();
   $("#no-cards-container").addClass("hidden");
@@ -125,7 +126,7 @@ $("#search-form").submit(function (event) {
           currentFormat.name +
           "&order=released";
   }
-
+  console.log(searchUrl);
   $.ajax({
     url: searchUrl,
     type: "GET",
@@ -344,7 +345,7 @@ $(document).ready(() => {
 
   $("#image-menu-commander").on("click", (event) => {
     event.preventDefault();
-    if (
+    if (partnerDisplay() || 
       !(currentFormat.name == "commander" || currentFormat.name == "brawl") ||
       event.target.classList.contains("disabled")
     )
@@ -359,12 +360,31 @@ $(document).ready(() => {
       }
       card.commander = true;
       removeCard(card);
-      $(".commander-display-image").attr("src", card.image_uris.normal);
-      $(".commander-display-image").attr("data-name", card.name);
+      $(commanderImages).attr("src", card.image_uris.normal);
+      $(commanderImages).attr("data-name", card.name);
       $("#commander-info-container").removeClass("hidden");
     }
     writeCardsLocalStorage();
     refreshSections();
+  });
+
+  $("#image-menu-partner").on("click", (event) => {
+    event.preventDefault();
+    if (partnerDisplay() || 
+      !(currentFormat.name == "commander" || currentFormat.name == "brawl") ||
+      event.target.classList.contains("disabled")
+    )  return;
+
+    let cardName = $(event.target).parent().attr("data-name");
+    let card = findLoadedCard(cardName);
+    if (card != null && card != undefined) {
+      card.commander = true;
+      removeCard(card);
+      let partner = $(".commander-display-image:nth-child(2)");
+      partner.attr('src', card.image_uris.normal);
+      partner.attr('data-name', card.name);
+      partner.removeClass("hidden");
+    }
   });
 
   $("#display-section").on("mousemove", (event) => {
@@ -421,14 +441,24 @@ $(document).ready(() => {
     //$("#drag-image").addClass("hidden");
   });
 
-  $(".commander-display-image").on("contextmenu", commanderContext);
+  $(commanderImages).on("contextmenu", commanderContext);
 
   $("#commander-menu-remove").on("click", (event) => {
     event.preventDefault();
-    console.log("called");
     let cardName = $(event.target).parent().attr("data-name");
-    $("#commander-info-container").addClass("hidden");
     let card = findLoadedCard(cardName);
+    if (!partnerDisplay()) {
+      $("#commander-info-container").addClass("hidden");
+    }
+    else {
+      let image = $(`.commander-display-image[data-name='${cardName}']`);
+      let order = image.attr("data-order");
+      if (order == "0") {
+        image.attr("src", $(image[0].nextElementSibling).attr("src"));
+        image.attr("data-name", $(image[0].nextElementSibling).attr("data-name"));
+      }
+      $(".commander-display-image:nth-child(2)").addClass("hidden");
+    }
     card.commander = false;
     addCard(card);
   });
@@ -480,40 +510,12 @@ $(document).ready(() => {
     event.stopPropagation();
   });
 
-  $(searchBar).on("focus", () => {
-    scryfallBar.textContent = "";
-  });
-
-  $(searchBar).on("input", (event) => {
-    let value = searchBar.value;
-    if (value.length > 0 && value[0] == "\\")  {
-      let pos = searchBar.selectionStart;
-      scryfallBar.textContent = value;
-      searchBar.value = "";
-      let setpos = document.createRange();
-      let set = window.getSelection();
-      setpos.setStart(scryfallBar.childNodes[0], pos);
-      setpos.collapse(true);
-      set.removeAllRanges();
-      set.addRange(setpos);
-      scryfallBar.focus();
-    }
-  });
-
   $(scryfallBar).on("input", (event) => {
     let content = scryfallBar.textContent;
-    if (content.length == 0) {
-      searchBar.value = "";
-      searchBar.focus();
-      return;
-    }
-    else if (content[0] != "\\") {
-      searchBar.value = content;
+    if (content[0] != "\\") {
       let pos = getCursorPosition(scryfallBar);
-      if (pos != null) {
-        searchBar.setSelectionRange(pos, pos);
-      }
-      searchBar.focus();
+      scryfallBar.innerHTML = content;
+      if (pos != null) setCursorPosEditable(scryfallBar, pos);
       return;
     }
     else {
@@ -522,8 +524,34 @@ $(document).ready(() => {
       setCursorPosEditable(scryfallBar, pos);
     }
   });
+
+  $(commanderImages).on("mousemove", (event) => {
+    if (partnerDisplay()) {
+      let rect = event.target.getBoundingClientRect();
+      let x = event.clientX - rect.left;
+      let order = $(event.target).attr("data-order");
+      let check = 0.65;
+      if ((order == "0" && x > check * rect.width) ||
+          (order == "1" && x < (1.0 - check) * rect.width)) {
+          $(event.target).removeClass("partner-top");
+          if (order == "0") $(event.target.nextElementSibling).addClass("partner-top");
+          else $(event.target.previousElementSibling).addClass("partner-top");
+      }
+      else {
+        if (!$(event.target).hasClass("partner-top")) {
+          $(commanderImages).removeClass("partner-top");
+          $(event.target).addClass("partner-top");
+        }
+      }
+    }
+  });
 });
 // ^ $(document).ready
+
+// returns true if their are partners on display
+function partnerDisplay() {
+  return (!$("#commander-info-container").hasClass("hidden") && !$(".commander-display-image:nth-child(2)").hasClass("hidden"));
+}
 
 /**
  * Refreshes card image events.
@@ -594,19 +622,29 @@ function refreshEvents() {
     $("#display-modal-container").css("display", "block");
 
     let card = findLoadedCard($(event.target).parent().attr("data-name"));
-    console.log(card.type_line);
     if (card != null && card != undefined) {
-      if (
-        currentFormat.name != "commander" ||
+      if (partnerDisplay() && 
+        (currentFormat.name != "commander" && currentFormat.name != "brawl") ||
         !(
           card.type_line.includes("Legendary") &&
           card.type_line.includes("Creature")
         )
       ) {
         $("#image-menu-commander").addClass("disabled");
-        console.log("setting disabled");
       } else {
         $("#image-menu-commander").removeClass("disabled");
+      }
+      if ($("#commander-info-container").hasClass("hidden") ||partnerDisplay() 
+        || !(currentFormat.name == "commander" || currentFormat.name == "brawl") ||
+      !(
+        card.type_line.includes("Legendary") &&
+        card.type_line.includes("Creature") && 
+        card.oracle_text.includes("Partner")
+      )) {
+        $("#image-menu-partner").addClass("disabled");
+      }
+      else {
+        $("#image-menu-partner").removeClass("disabled");
       }
     }
   });
@@ -632,26 +670,20 @@ $(document).on("keydown", (event) => {
   // select search bar
   let active = document.activeElement;
   let scryfallContent = scryfallBar.textContent.trimStart();
-  if (event.key == "/" && active.tagName.toLowerCase() != "input" && scryfallBar != active) {
-    $(searchBar).focus();
-    searchBar.select();
-    scryfallContent = "";
-    return false;
-  }
-  if (event.key == "\\" && active.tagName.toLowerCase() != "input" && active.id != "scryfall-input") {
-    searchBar.value = "";
-    if (scryfallContent != "") {
+  if (event.key == "\\"|| event.key == "/" && active.tagName.toLowerCase() != "input" && active.id != "scryfall-input") {
+    if (scryfallContent != "" || event.key == "/") {
       setCursorPosEditable(scryfallBar, scryfallContent.length);
       $(scryfallBar).focus();
       return false;
     }
     $(scryfallBar).focus();
   }
-  if (event.key == "\n" && active.id == "scryfall-input") {
+  if (event.key == "Enter" && active.id == "scryfall-input") {
+    // search scryfall
+    document.getElementById("search-submit").click();
     return false;
   }
 });
-
 
 // potential colors: #246782, #a71f2a, #521987, #47553c
 // at 80 luminosity: #39A2CC, #CC2735, #7C27CC, #AACC91
@@ -818,6 +850,10 @@ function hylightScryfall(search) {
   return ret;
 }
 
+function displaySearchHelp() {
+  
+}
+
 function isAlpha(char) {
   const code = char.charCodeAt(0);
   return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
@@ -881,7 +917,22 @@ function loadLocalStorage() {
         loadedCards = res.list;
         writeCardsLocalStorage();
         loadedCards.forEach((card) => {
-          addCard(card);
+          if (card.commander) {
+            if ($("#commander-info-container").hasClass("hidden")) {
+              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
+              $(commanderImages).attr("data-name", loadedCards[i].name);
+              $("#commander-info-container").removeClass("hidden");
+            }
+            else {
+              let partner = $(".commander-display-image:nth-child(2)");
+              $(partner).attr("src", loadedCards[i].image_uris.normal);
+              $(partner).attr("data-name", loadedCards[i].name);
+              partner.removeClass('hidden');
+            }
+          }
+          else {
+            addCard(card);
+          }
         });
         refreshDeckFormat();
         refreshSections();
@@ -913,15 +964,17 @@ function loadLocalStorage() {
             loadedCards[i].commander != undefined &&
             loadedCards[i].commander
           ) {
-            $(".commander-display-image").attr(
-              "src",
-              loadedCards[i].image_uris.normal,
-            );
-            $(".commander-display-image").attr(
-              "data-name",
-              loadedCards[i].name,
-            );
-            $("#commander-info-container").removeClass("hidden");
+            if ($("#commander-info-container").hasClass("hidden")) {
+              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
+              $(commanderImages).attr("data-name", loadedCards[i].name);
+              $("#commander-info-container").removeClass("hidden");
+            }
+            else {
+              let partner = $(".commander-display-image:nth-child(2)");
+              $(partner).attr("src", loadedCards[i].image_uris.normal);
+              $(partner).attr("data-name", loadedCards[i].name);
+              partner.removeClass('hidden');
+            }
           } else {
             console.log(loadedCards[i].name);
             addCard(loadedCards[i]);
@@ -938,15 +991,16 @@ function loadLocalStorage() {
             loadedCards[i].commander != undefined &&
             loadedCards[i].commander
           ) {
-            $(".commander-display-image").attr(
-              "src",
-              loadedCards[i].image_uris.normal,
-            );
-            $(".commander-display-image").attr(
-              "data-name",
-              loadedCards[i].name,
-            );
-            $("#commander-info-container").removeClass("hidden");
+            if ($("#commander-info-container").hasClass("hidden")) {
+              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
+              $(commanderImages).attr("data-name", loadedCards[i].name);
+              $("#commander-info-container").removeClass("hidden");
+            }
+            else {
+              let partner = $(".commander-display-image:nth-child(2)");
+              $(partner).attr("src", loadedCards[i].image_uris.normal);
+              $(partner).attr("data-name", loadedCards[i].name);
+            }
           } else {
             addCard(loadedCards[i]);
           }
@@ -1109,27 +1163,34 @@ function refreshDeckFormat() {
   }
 
   // set or remove commander if visible
-  let commander = loadedCards.find((item) => item.commander);
+  //let commander = loadedCards.find((item) => item.commander);
+  let commanders = [];
+  loadedCards.forEach((card) => { if (card.commander) commanders.push(card); });
   if (currentFormat.name != "commander" && currentFormat.name != "brawl") {
-    if (
-      commander != null &&
-      commander != undefined &&
-      !$("#commander-info-container").hasClass("hidden")
-    ) {
+    if (commanders.length > 0 && !$("#commander-info-container").hasClass("hidden")) {
       $("#commander-info-container").addClass("hidden");
-      addCard(commander);
+      for (let i = 0; i < commanders.length; i++) addCard(commanders[i]);
       refreshSections();
     }
-  } else {
-    if (
-      commander != null &&
-      commander != undefined &&
-      $("#commander-info-container").hasClass("hidden")
-    ) {
-      $(".commander-display-image").attr("src", commander.image_uris.normal);
-      $(".commander-display-image").attr("data-name", commander.name);
+  } 
+  else {
+    if (commanders.length > 0 && $("#commander-info-container").hasClass("hidden")) {
+      let children = $("#commander-flex").children();
+      if (commanders.length == 1) {
+        $(commanderImages).attr("src", commanders[0].image_uris.normal);
+        $(commanderImages).attr("data-name", commanders[0].name);
+        removeCard(commanders[0]);
+      }
+      else {
+        children.eq(0).attr("src", commanders[0].image_uris.normal);
+        children.eq(0).attr("data-name", commanders[0].name);
+        removeCard(commanders[0]);
+        children.eq(1).attr("src", commanders[1].image_uris.normal);
+        children.eq(1).attr("data-name", commanders[1].name);
+        removeCard(commanders[1]);
+        $("#commander-info-container").removeClass("hidden");
+      }
       $("#commander-info-container").removeClass("hidden");
-      removeCard(commander);
       refreshSections();
     }
   }
@@ -1150,7 +1211,7 @@ function refreshSections() {
     str += height.id + ",";
   });
   let groups = [];
-  let len = Math.max(3, Math.min(
+  let len = Math.max(2, Math.min(
     actualHeightLength,
     $(".display-column:not(.hidden)").length,
   ));
@@ -1178,8 +1239,10 @@ function refreshSections() {
     groups[min].total += heights[i].height;
   }
   columns.each((index, obj) => {
-    for (let i = 0; i < groups[index].sections.length; i++) {
-      obj.appendChild(document.getElementById(groups[index].sections[i]));
+    if (index < len) {
+      for (let i = 0; i < groups[index].sections.length; i++) {
+        obj.appendChild(document.getElementById(groups[index].sections[i]));
+      }
     }
   });
 }
