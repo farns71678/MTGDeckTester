@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Deck Tester - Create a new Standard deck</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Nunito", "Arial", sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            display: flex;
+            justify-content: center;
+            background-color: #2a342a;
+        }
+
+        #main-container {
+            height: 100vh;
+            width: 40vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        i {
+            font-size: 15em;
+            color: #cecece;
+            filter: drop-shadow(0 0 0.1em rgba(30, 255, 30, 0.3));
+        }
+        
+        #err-title {
+            font-size: 3.0em;
+            color: #eaeeea
+        }
+
+        #err-subtext {
+            font-size: 14pt;
+            color: #ddd;
+            text-align: center;
+        }
+
+        #decks-btn {
+            border: none;
+            background-color: #1e9c24;
+            color: white;
+            padding: 12px 12px;
+            font-size: 14pt;
+            border-radius: 14px;
+            margin-top: 1.4em;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #decks-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 10px 2px rgba(20, 20, 20, 0.3);
+        }
+
+        @media only screen and (max-width: 800px) {
+            #main-container {
+                width: 65vw;
+            }
+
+            i {
+                font-size: 14em;
+            }
+        }
+
+        @media only screen and (max-width: 500px) {
+            #main-container {
+                width: 94vw;
+            }
+
+            i {
+                font-size: 12em;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div id="main-container">
+        <i class="bx bxs-error-circle"></i>
+        <h1 id="err-title">404</h1>
+        <p id="err-subtext">Oops! It looks like the page your looking for does not exist. </p>
+        <button id="decks-btn">My Decks</button>
+    </div>
+</body>
+</html>

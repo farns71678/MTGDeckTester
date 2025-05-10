@@ -65,6 +65,10 @@ app.use(
   }),
 );
 
+app.use((req, res) => {
+  res.status(404).sendFile("./404.html", { root: __dirname });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
