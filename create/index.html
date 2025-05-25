@@ -42,6 +42,7 @@
                 <div class="dropdown-item dropdown-radio" data-value="6"><i class="bx bxs-circle"></i>6</div>
               </div>
             </div>
+            <div class="dropdown-item" id="dropdown-background-btn">Change Background</div>
           </div>
         </div>
       </div>
@@ -247,7 +248,7 @@
     </div>
 
     <!--modal section-->
-    <div id="modal-section" class="hidden">
+    <div id="modal-section" class="">
       <div id="card-viewer-container" class="hidden">
         <div class="card-viewer-count-row">
           <div class="card-viewer-input-label">CARD COUNT:</div>
@@ -265,6 +266,35 @@
           alt="Aurelia, the Warleader"
           class="card-viewer-image"
         />
+      </div>
+      <div id="settings-container" class="">
+        <div id="settings-header">
+            <div id="settings-header-offset" style="visibility: hidden;">&times;</div>
+            <h1 id="settings-title">Settings</h1>
+            <div id="settings-close-btn">&times;</div>
+        </div>
+        <div id="settings-flex">
+          <div id="settings-tab-container">
+            <div id="settings-tab-layout" class="settings-tab">Layout</div>
+            <div id="settings-tab-view-options" class="settings-tab">View Options</div>
+            <div id="settings-tab-background" class="settings-tab selected">Background</div>
+          </div>
+          <div id="settings-options-container">
+            <div id="settings-layout" class="settings-option">
+              <div class="setting-header">Layout</div>
+            </div>
+            <div id="settings-view-options" class="settings-option">
+              <div class="setting-header">View Options</div>
+            </div>
+            <div id="settings-background" class="settings-option selected">
+              <div class="setting-header">Background</div>
+              <div id="background-image-container">
+                <!--<div class="background-image-wrap selected"><div class="background-img" style="--url:url('');"></div></div>-->
+              </div>
+            </div>
+          </div>
+        </div>
+        
       </div>
     </div>
   </body>

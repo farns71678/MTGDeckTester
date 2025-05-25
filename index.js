@@ -7,6 +7,8 @@ const port = 3000;
 
 // Web navigation
 
+app.set('view engine', 'ejs');
+
 app.get("/", (req, res) => {
   //res.send('Hello, world!');
   res.sendFile(__dirname + "/home/index.html");
@@ -29,7 +31,15 @@ app.get("/create/storage.json", (req, res) => {
 });
 
 app.get("/decks", (req, res) => {
-  res.send("My decks");
+  res.render('decks');
+});
+
+app.get("/decks/style.css", (req, res) => {
+  res.sendFile("./decks/style.css", { root: __dirname });
+});
+
+app.get("/decks/app.js", (req, res) => {
+  res.sendFile("./decks/app.js", { root: __dirname });
 });
 
 app.get("/images/*", (req, res) => {

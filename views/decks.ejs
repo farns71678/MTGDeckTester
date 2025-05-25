@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Deck Tester - Your Decks</title>
+
+    <link rel="stylesheet" href="./decks/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="./decks/app.js" defer></script>
+</head>
+<body>
+
+    <% let decknum = 12; %>
+
+    <nav>
+        <div id="nav-title">MTG Deck Builder</div>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/create">Create</a></li>
+        </ul>
+    </nav>
+
+    <div id="flex-container">
+        <% for (let i = 0; i < decknum; i++) { %>
+            <div class="deck-container">
+                <div class="deck-image"></div>
+                <div class="deck-body">
+                    <div class="deck-flex deck-title-row">
+                        <h2 class="deck-title">Cool Deck</h2>
+                        <div class="deck-count-container">30/100</div>
+                    </div>
+                    <hr>
+                    <div class="deck-flex format-flex">
+                        <h3 class="deck-format">Commander</h3>
+                        <div class="legal-icon-container">
+                            <i class="bx bx-error legal-icon"></i>
+                            <div class="legal-text">Not Legal</div>
+                        </div>
+                    </div>
+                    <div class="deck-legal-errors">
+                        <hr style="margin-bottom: 6px;">
+                        <div class="legal-err">Too few cards. </div>
+                        <div class="legal-err">Contains cards not legal in format. </div>
+                    </div>
+                    <div class="deck-btn-flex">
+                        <i class="bx bx-arrow-back">
+                            <div class="tooltip" style="display: none;">Return</div>
+                        </i>
+                        <i class="bx bx-git-repo-forked">
+                            <div class="tooltip">Fork</div>
+                        </i>
+                        <i class="bx bx-share-alt">
+                            <div class="tooltip">Share</div>
+                        </i>
+                        <i class="bx bx-edit">
+                            <div class="tooltip">Edit</div>
+                        </i>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+</body>
+</html>

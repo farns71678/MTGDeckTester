@@ -234,6 +234,37 @@ $(document).ready(() => {
   refreshEvents();
   loadLocalStorage();
 
+  //setup background images
+  let backgroundUrls = [
+    "https://th.bing.com/th/id/OIP.iHqYoRUCtV98zJH7cFU7DgHaEK?rs=1&pid=ImgDetMain",
+    "https://images.ctfassets.net/s5n2t79q9icq/ZDZ2qfFsSFpQqosckY37K/45568e4fd4e2867f73981bccd0400a8d/Wallpaper_Monument_to_Endurance_1920x1080.jpg",
+    "https://images.ctfassets.net/s5n2t79q9icq/qsUFcCrortyNoazihIuU3/2768ea97dc714d1c64349fc930c2027d/Wallpaper_Rite_of_the_Dragoncaller_1920x1080.jpg",
+    "https://images.ctfassets.net/s5n2t79q9icq/7xb7krA8Zh5Z2yKiuh8lpH/2c0ec7ca3d5be4b96de2a7d01de7ad10/Wallpaper_Plains_1920x1080.jpg",
+    "https://images.ctfassets.net/s5n2t79q9icq/34FP0kFNE4QKH50BmpTwdD/eed714cf72ce9d22369fdd6c3ca5fc79/Wallpaper_1920x1080_Rome_Vista.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/3PIfPHG9E0EUkKa2DqE5DW/a5295e90aa046f1c345e9d1dd8f97ab0/MKM-028_KWLSNFAG6_1920x1080.jpg",
+    "https://images.ctfassets.net/s5n2t79q9icq/5jDLvIi57rYL6CQGZo6fNw/8fb3f207c15ecb0683a6c9c6f1236722/Wallpaper_1920x1080_Edgewall_Inn.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/MjbLsEkZVR2yT2uXCvsbP/7f86ce40fe6a863309e4a026bae3821a/Wallpaper_1920x1080_Sauron__the_Dark_Lord.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/yNcQcHbTSZumOsxYMHOjh/f8bf8d964aea4ae635ac0974f6c6ce63/Wallpaper_1920x1080_Nazg__l.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/1cY9lSNa9UR4qCBRjfipyY/851ff7d58ff4100c97de0124aa67c430/Wallpaper_1920x1080_Sunpetal_Grove.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/aFlaeeAkf7GlREVeHBgCV/075ab3f2660e401c558630311bbbd1e3/Wallpaper_1920x1080_Fiery_Inscription.png",
+    "https://images.ctfassets.net/s5n2t79q9icq/2erBYjEqqWZBrVH8GSAca6/6ac5200a9174fe954bec8b4bd12d5e84/Elesh_Norn_1920x1080_EN.png"
+  ];
+  let imageContainer = $("#background-image-container");
+  backgroundUrls.forEach((url) => {
+    imageContainer.append(`<div class="background-image-wrap"><div class="background-img" style="--url:url('${url}');" data-url="${url}"></div></div>`);
+  });
+
+  $(".background-img").on("click", (event) => {
+    let url = $(event.target).attr("data-url");
+    if (url != null && url != undefined && url.length > 0) {
+      $("#display-section").css("background-image", "url(" + url + ")");
+      $(".background-image-wrap").removeClass("selected");
+      $(event.target.parentNode).addClass("selected");
+      writeViewLocalStorage();
+    }
+  });
+
+
   $("#format-option").on("change", (event) => {
     event.preventDefault();
     currentFormat = formats.find(
@@ -419,6 +450,7 @@ $(document).ready(() => {
         $(grabbedImage).css("transform", "translateY(-" + underDiff + "px)");
         dragStartY = event.clientY + underDiff;
         dragStartX = event.clientX;
+        writeCardsLocalStorage();
       } else if (overDiff != null && ((collapsed && overDiff < 17) || (!collapsed && overDiff < 41))) {
         over.parent().before($(grabbedImage).parent());
         $(grabbedImage).css(
@@ -427,6 +459,7 @@ $(document).ready(() => {
         );
         dragStartY = event.clientY - overDiff;
         dragStartX = event.clientX;
+        writeCardsLocalStorage();
       }
     }
   });
@@ -510,6 +543,16 @@ $(document).ready(() => {
     event.stopPropagation();
   });
 
+  $("#dropdown-background-btn").on("click", (event) => {
+    $("#modal-section").removeClass("hidden");
+    $("#settings-container").removeClass("hidden");
+  });
+
+  $("#settings-close-btn").on("click", (event) => {
+    $("#modal-section").addClass("hidden");
+    $("#settings-container").addClass("hidden");
+  })
+
   $(scryfallBar).on("input", (event) => {
     let content = scryfallBar.textContent;
     if (content[0] != "\\") {
@@ -544,6 +587,13 @@ $(document).ready(() => {
         }
       }
     }
+  });
+
+  $(".settings-tab").on("click", (event) => {
+    $(".settings-tab").removeClass("selected");
+    $(".settings-option").removeClass("selected");
+    $(event.target).addClass("selected");
+    $("#" + "settings-" + event.target.id.substring(13)).addClass("selected");
   });
 });
 // ^ $(document).ready
@@ -896,6 +946,13 @@ function loadLocalStorage() {
         else $(obj).addClass("hidden");
       });
     }
+    if (view.background != null && view.background != undefined && view.background.length > 0) {
+      $("#display-section").css("background-image", view.background);
+      $(".backgroud-image-wrap").removeClass("selected");
+      $(".background-img").each((i, obj) => {
+        if ($(obj).css("background-image") == view.background) $(obj).addClass('selected');
+      });
+    }
   }
   if (info != null && info != undefined) {
     info = JSON.parse(info);
@@ -1045,6 +1102,7 @@ function getViewStorageJSON() {
         "#columns-dropdown>.dropdown-side-content>.dropdown-radio.radio-selected",
       ).attr("data-value"),
     ),
+    background: $("#display-section").css("background-image")
   };
   return json;
 }
@@ -1080,6 +1138,16 @@ function getCardStorageJSON() {
       json.list.push(addedCard);
     }
   });
+  $(".card-type-container:not(.hidden)").each((index, parent) => {
+    $(parent).children().each((i, obj) => {
+      if (i != 0) {
+        let addedCard = json.list.find(item => item.name.toLowerCase() == $(obj).attr("data-name").toLowerCase());
+        if (addedCard != null && addedCard != undefined) addedCard.index = i;
+      }
+    });
+  });
+  const maxInteger = Number.MAX_SAFE_INTEGER;
+  json.list = json.list.sort((a, b) => (a.index == null || a.index == undefined ? maxInteger : a.index) - (b.index == null || b.index == undefined ? maxInteger : b.index));
   return json;
 }
 
