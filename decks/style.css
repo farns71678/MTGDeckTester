@@ -212,8 +212,7 @@ https://images.ctfassets.net/s5n2t79q9icq/4LpgzcvaRWC33zRVg7OtTo/ad9b36399072913
 
 .legal-err {
     color: rgb(226 54 54);
-    opacity: 0;
-    transition: all 0.5s ease-in;
+    /*transition: all 0.5s ease-in;*/
     font-size: 10.5pt;
 }
 
@@ -316,7 +315,17 @@ https://images.ctfassets.net/s5n2t79q9icq/4LpgzcvaRWC33zRVg7OtTo/ad9b36399072913
 }
 
 .deck-body.legal-view>.deck-legal-errors>.legal-err {
-    opacity: 1;
+    animation: fadeIn calc(var(--i) * 0.2s + 0.4s) ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        display: block;
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .deck-body.legal-view>.deck-btn-flex>i:nth-child(n + 2) {

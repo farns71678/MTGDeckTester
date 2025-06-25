@@ -1,13 +1,24 @@
 const express = require("express");
 const proxy = require("express-http-proxy");
+const mongoose = require("mongoose");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const url = require("url");
+const authRoutes = require('./routes/authRoutes');
+const cookieParser = require('cookie-parser');
+const { requireAuth, checkUser } = require('./middleware/authMIddleware');
 const app = express();
 const port = 3000;
+
+//middleware
+//app.use(express.static('public'));
+app.use(express.json());
+app.use(cookieParser);
 
 // Web navigation
 
 app.set('view engine', 'ejs');
+
+app.get('*', checkUser);
 
 app.get("/", (req, res) => {
   //res.send('Hello, world!');
@@ -30,7 +41,7 @@ app.get("/create/storage.json", (req, res) => {
   res.sendFile(__dirname + "/create/storage.json");
 });
 
-app.get("/decks", (req, res) => {
+app.get("/decks", requireAuth, (req, res) => {
   res.render('decks');
 });
 
@@ -79,6 +90,15 @@ app.use((req, res) => {
   res.status(404).sendFile("./404.html", { root: __dirname });
 });
 
+// database connection
+const dbURI = 'mongodb+srv://shaun:test1234@cluster0.del96.mongodb.net/node-auth';
+/*mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
+  .then((result) => app.listen(3000))
+  .catch((err) => console.log(err));*/
+
+app.use(authRoutes);
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
