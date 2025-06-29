@@ -21,7 +21,7 @@ const deckSchema = new mongoose.Schema({
         validate: [(val) => val.length > 0, "Deck must contain cards. "]
     },
     format: {
-        type: Int32,
+        type: mongoose.Schema.Types.Int32,
         required: true,
         default: 0,
         validate: [(val) => { return (val < formats.length && val >= 0); }, "Unable to find format."]
@@ -43,7 +43,7 @@ const deckSchema = new mongoose.Schema({
         default: false
     },
     owner: {
-        type: ObjectId
+        type: mongoose.Schema.Types.ObjectId
     },
     backgroundUrl: {
         type: String

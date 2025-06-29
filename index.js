@@ -91,17 +91,24 @@ app.use((req, res) => {
   res.status(404).sendFile("./404.html", { root: __dirname });
 });
 
-// database connection
-const dbURI = 'mongodb+srv://shaun:test1234@cluster0.del96.mongodb.net/node-auth';
-/*mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
-  .then((result) => app.listen(3000))
-  .catch((err) => console.log(err));*/
 
 // routes
 app.use(authRoutes);
 app.use(storageRoutes);
 
-app.listen(port, () => {
+// database connection
+//mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder
+// //?retryWrites=true&w=majority&appName=Cluster0
+const dbURI = 'mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder';
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then((result) => {
+    app.listen(port);
+    console.log(`Example app listening on port ${port}`);
+  })
+  .catch((err) => console.log(err));
+
+
+/*app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
-});
+});*/
 
