@@ -21,7 +21,7 @@ const requireAuth = (req, res, next) => {
     }
 }
 
-// check current user
+// check current user and changes req to store user information
 const checkUser = (req, res, next) => {
     const token = req.cookies.jwt;
     

@@ -20,10 +20,10 @@ const userSchema = new mongoose.Schema({
         minlength: [10, "Min length 10 characters. "],
     },
     decks: {
-        type: [Shema.Types.ObjectId],
+        type: [mongoose.Schema.Types.ObjectId],
         required: true
     },
-    collection: {
+    cardCollection: {
       type: [collectionCardSchema]
     }
 });

@@ -44,6 +44,9 @@ const deckSchema = new mongoose.Schema({
     },
     owner: {
         type: ObjectId
+    },
+    backgroundUrl: {
+        type: String
     }
 });
 

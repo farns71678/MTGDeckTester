@@ -39,7 +39,7 @@ const createToken = (id) => {
     });
 }
 
-module.exports.signup_get = (req, req) => {
+module.exports.signup_get = (req, res) => {
     res.render('signup');
 }
 
@@ -58,7 +58,7 @@ module.exports.signup_post = async (req, res) => {
     }
 }
 
-module.exports.login_get = (req, req) => {
+module.exports.login_get = (req, res) => {
     res.render('login');
 }
 

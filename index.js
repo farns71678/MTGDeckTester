@@ -4,8 +4,9 @@ const mongoose = require("mongoose");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const url = require("url");
 const authRoutes = require('./routes/authRoutes');
+const storageRoutes = require("./routes/storageRoutes");
 const cookieParser = require('cookie-parser');
-const { requireAuth, checkUser } = require('./middleware/authMIddleware');
+const { requireAuth, checkUser } = require('./middleware/authMiddleware');
 const app = express();
 const port = 3000;
 
@@ -96,7 +97,9 @@ const dbURI = 'mongodb+srv://shaun:test1234@cluster0.del96.mongodb.net/node-auth
   .then((result) => app.listen(3000))
   .catch((err) => console.log(err));*/
 
+// routes
 app.use(authRoutes);
+app.use(storageRoutes);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
