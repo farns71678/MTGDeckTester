@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Deck Builder - Viewer</title>
+
+    <link href="./viewer/styles.css" rel="stylesheet" />
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="./viewer/app.js" defer></script>
+</head>
+<body>
+    
+<div id="widget-container">
+  
+  <div id="widget-deck-header">
+    <form id="widget-form">
+      <input type="number" name="count" id="card-count-input" min="1" value="4">
+      <input type="text" name="card" id="card-add-input" placeholder="Add Card">
+      <button id="card-add-submit" class="widget-icon-btn tooltip-container"><i class="bx bxs-plus-circle"></i><span class="tooltip-text bottom">Add Card</span></button>
+      <input type="file" name="file" id="widget-file-upload" accept="text/plain|application/json">
+      <input type="file" name="" id="widget-deck-upload" accept="application/json">
+      <button id="widget-upload-btn" class="widget-icon-btn tooltip-container"><i class="bx bxs-file-import"></i><span class="tooltip-text bottom">Import Cards</span></button>
+      <button id="widget-export-btn" class="widget-icon-btn tooltip-container"><i class="bx bxs-file-export"></i><span class="tooltip-text bottom">Export Deck</span></button>
+      <button id="widget-deck-load-btn" class="widget-icon-btn tooltip-container"><i class="bx bxs-file"></i><span class="tooltip-text bottom">Load Deck</span></button>
+      <button id="widget-clear-btn" class="widget-icon-btn tooltip-container"><i class="bx bxs-trash-alt"></i><span class="tooltip-text bottom">Clear Cards</span></button>
+      <!-- populated by JS -->
+      <select name="format" id="widget-deck-format-input"></select>
+      <input type="submit" class="hidden" value="">
+    </form>
+  </div>
+  <!--<div id="widget-err-container"></div>
+  <div id="widget-form-err"></div>-->
+  <div id="widget-deck-flex">
+    <div id="widget-deck-info">
+      <!--<input type="text" id="widget-name-input" value="Deck">-->
+      <div id="widget-name-container">
+        <div id="widget-name-input" contenteditable="true" spellcheck="false">Deck</div>
+      </div>
+      <div id="widget-deck-count-container">
+        <span id="widget-deck-count">0</span>/<span id="widget-deck-min-count">60</span>
+      </div>
+    </div>
+
+    <!--stats section-->
+    <div id="widget-stats-container" class="not-visible">
+      <div id="widget-mana-curve">
+        <div id="widget-ramp-flex">
+          <!--<div class="widget-ramp-column">
+            <div class="widget-ramp-bar"></div>
+            <div class="widget-ramp-val">1</div>
+          </div>
+          <div class="widget-ramp-column">
+            <div class="widget-ramp-bar"></div>
+            <div class="widget-ramp-val">2</div>
+          </div>
+          <div class="widget-ramp-column">
+            <div class="widget-ramp-bar"></div>
+            <div class="widget-ramp-val">3</div>
+          </div>-->
+        </div>
+      </div>
+    </div>
+
+    <div id="widget-deck-display-container">
+      
+      <!--<div class="card-group">
+        <div class="card-group-header">
+          <div class="card-group-title">CREATURE</div>
+          <div class="card-group-count">18</div>
+        </div>
+        <div class="card-group-list">
+          <div class="card-group-card">
+            <div class="card-group-card-count">2</div>
+              <div class="card-group-card-name">
+              <svg class="fit-text">
+                <text>Drakuseth, Maw of Flames and Wings of Glory</text>
+              </svg>
+              </div>
+            <div class="card-group-card-cost">
+              <div class="card-symbol card-symbol-5">{5}</div>
+              <div class="card-symbol card-symbol-R">{R}</div>
+              <div class="card-symbol card-symbol-R">{R}</div>
+            </div>
+          </div>
+          <div class="card-group-card">
+            <div class="card-group-card-count">4</div>
+            <div class="card-group-card-name">Drakuseth, Maw of Flames</div>
+            <div class="card-group-card-cost">
+              <div class="card-symbol card-symbol-3">{3}</div>
+              <div class="card-symbol card-symbol-W">{W}</div>
+              <div class="card-symbol card-symbol-R">{R}</div>
+            </div>
+          </div>
+        </div>
+      </div>-->
+      
+      <!--<div id="creature-card-group" class="card-group">
+        <div class="card-group-header">
+          <div class="card-group-title">CREATURE</div>
+          <div class="card-group-count">0</div>
+        </div>
+        <div class="card-group-list"></div>
+      </div>-->
+      
+    </div>
+    <div id="widget-deck-legend">
+      <div class="legend-item" style='color: var(--format-err-color)'>
+        <span class="legend-color" style='background-color: var(--format-err-color)'></span>
+        Card not legal in format
+      </div>
+    </div>
+  </div>
+
+  <div id="widget-right-click" class="hidden">
+    <!--<div class="widget-menu-option" id="right-click-count">
+      <form id="context-menu-count-form">
+        <input type="number" name="count" id="context-menu-count-input">
+      </form>
+    </div>-->
+    <input type="number" name="count" id="context-menu-count-input" class="widget-menu-option" min="0">
+    <div class="widget-menu-option" id="right-click-delete">Remove</div>
+    <div class="widget-menu-option" id="right-click-sideboard">Add to Sideboard</div>
+    <div class="widget-menu-option" id="right-click-remove-sideboard">Remove from Sideboard</div>
+  </div>
+
+  <div id="widget-tool-panel-container">
+    <div class="widget-tool-tail up"></div>
+    <div id="widget-tool-panel" class="widget-tool-tails">
+      <div id="widget-tool-deck-load" class="widget-tool-item tooltip-container"><i class="bx bxs-file"></i><span class="tooltip-text right">Load Deck</span></div>
+      <div id="widget-tool-stats" class="widget-tool-item tooltip-container"><i class="bx bxs-bar-chart-alt-2"></i><span class="tooltip-text right">Deck Stats</span></div>
+      <div id="widget-tool-upload" class="widget-tool-item tooltip-container"><i class="bx bxs-file-import"></i><span class="tooltip-text right">Import Cards</span></div>
+      <div id="widget-tool-export" class="widget-tool-item tooltip-container"><i class="bx bxs-file-export"></i><span class="tooltip-text right">Export Deck</span></div>
+      <div id="widget-tool-clear" class="widget-tool-item tooltip-container"><i class="bx bxs-trash"></i><span class="tooltip-text right">Clear Cards</span></div>
+      <div id="widget-tool-settings" class="widget-tool-item tooltip-container"><i class="bx bxs-cog"></i><span class="tooltip-text right">Settings</span></div>
+    </div>  
+    <div class="widget-tool-tail down"></div>
+  </div>
+
+  <div id="widget-err-container"></div>
+
+  <div id="widget-modal-container" class="hidden">
+    <div id="multiple-cards-dialog">
+      <h2>Multiple Cards Found</h2>
+      <div id="multiple-results-container">
+        <div class="card-result">
+          <div class="card-result-text">
+            <div class="card-result-name">Drakuseth, Maw of Flames</div>
+            <div class="card-result-type-line">Legendary Creature - Dragon Avatar</div>
+          </div>
+          <div class="card-result-cost">
+            <span class="card-symbol card-symbol-4">{4}</span>
+            <span class="card-symbol card-symbol-R">{R}</span>
+            <span class="card-symbol card-symbol-R">{R}</span>
+            <span class="card-symbol card-symbol-R">{R}</span>
+          </div>
+        </div>
+      </div>
+      <button id="multiple-cards-cancel-btn">Cancel</button>
+  </div>
+
+  <div id="card-view-dialog">
+
+  </div>
+</div>
+</body>
+</html>

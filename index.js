@@ -42,6 +42,18 @@ app.get("/create/storage.json", (req, res) => {
   res.sendFile(__dirname + "/create/storage.json");
 });
 
+app.get("/viewer", (req, res) => {
+  res.sendFile(__dirname + "/create/index.html");
+});
+
+app.get("/viewer/app.js", (req, res) => {
+  res.sendFile(__dirname + "/create/app.js");
+});
+
+app.get("/viewer/styles.css", (req, res) => {
+  res.sendFile(__dirname + "/create/styles.css");
+});
+
 app.get("/decks", requireAuth, (req, res) => {
   res.render('decks');
 });
