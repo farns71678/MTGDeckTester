@@ -245,8 +245,9 @@ function addCardEventListeners(el) {
     const rect = this.getBoundingClientRect();
     const card = cardMap.get($(this).data('name').toLowerCase());
     let tooltip = $("#img-tooltip-" + card.id);
-    const imgRect = tooltip[0].getBoundingClientRect();
     if ($("#widget-deck-display-container").css("column-count") == 2) {
+      tooltip.addClass("split-view");
+      const imgRect = tooltip[0].getBoundingClientRect();
       const imgTop = rect.top / vh * (vh - imgRect.height);
       if (rect.left + container[0].scrollLeft < vw / 2) {
         // card hover right
@@ -263,6 +264,8 @@ function addCardEventListeners(el) {
       }
     }
     else {
+      tooltip.removeClass('split-view');
+      const imgRect = tooltip[0].getBoundingClientRect();
       if ((rect.bottom + rect.top) / 2 < vh / 2) {
         // card hover down
         tooltip.css({
