@@ -8,6 +8,9 @@ const deckCardSchema = new mongoose.Schema({
     commander: {
         type: Boolean
     },
+    index: {
+        type: Number
+    },
     scryfallId: {
         type: String,
         required: true

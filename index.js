@@ -3,8 +3,7 @@ const proxy = require("express-http-proxy");
 const mongoose = require("mongoose");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const url = require("url");
-const authRoutes = require('./routes/authRoutes');
-const storageRoutes = require("./routes/storageRoutes");
+const routes = require('./routes/exports.js');
 const cookieParser = require('cookie-parser');
 const { requireAuth, checkUser } = require('./middleware/authMiddleware');
 const app = express();
@@ -15,7 +14,7 @@ const port = 3000;
 app.use(express.json());
 app.use(cookieParser);
 
-// Web navigation
+// Web navigation routes
 
 app.set('view engine', 'ejs');
 
@@ -24,46 +23,6 @@ app.get('*', checkUser);
 app.get("/", (req, res) => {
   //res.send('Hello, world!');
   res.sendFile(__dirname + "/home/index.html");
-});
-
-app.get("/create", (req, res) => {
-  res.sendFile(__dirname + "/create/index.html");
-});
-
-app.get("/create/app.js", (req, res) => {
-  res.sendFile(__dirname + "/create/app.js");
-});
-
-app.get("/create/styles.css", (req, res) => {
-  res.sendFile(__dirname + "/create/styles.css");
-});
-
-app.get("/create/storage.json", (req, res) => {
-  res.sendFile(__dirname + "/create/storage.json");
-});
-
-app.get("/viewer", (req, res) => {
-  res.sendFile(__dirname + "/create/index.html");
-});
-
-app.get("/viewer/app.js", (req, res) => {
-  res.sendFile(__dirname + "/create/app.js");
-});
-
-app.get("/viewer/styles.css", (req, res) => {
-  res.sendFile(__dirname + "/create/styles.css");
-});
-
-app.get("/decks", requireAuth, (req, res) => {
-  res.render('decks');
-});
-
-app.get("/decks/style.css", (req, res) => {
-  res.sendFile("./decks/style.css", { root: __dirname });
-});
-
-app.get("/decks/app.js", (req, res) => {
-  res.sendFile("./decks/app.js", { root: __dirname });
 });
 
 app.get("/images/*", (req, res) => {
@@ -105,8 +64,12 @@ app.use((req, res) => {
 
 
 // routes
-app.use(authRoutes);
-app.use(storageRoutes);
+app.use(routes.authRoutes);
+app.use(routes.storageRoutes);
+app.use('/create', routes.createRoutes);
+app.use('/decks', routes.decksRoutes);
+app.use('/viewer', routes.viewerRoutes);
+app.use('/account', routes.accountRoutes);
 
 // database connection
 //mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder

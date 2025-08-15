@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 //const { isEmail } = require('validator');
 const bcrypt = require('bcrypt');
+const { default: isEmail } = require('validator/lib/isEmail');
 
 const collectionCardSchema = new mongoose.Schema({
   count: { type: Number },
@@ -18,6 +19,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please enter a password"],
         minlength: [10, "Min length 10 characters. "],
+    },
+    email: {
+      type: String,
+      required: [true, "Please enter an email. "],
+      unique: true,
+      validate: [(val) => isEmail(val), "Please enter a valid email. "]
     },
     decks: {
         type: [mongoose.Schema.Types.ObjectId],
