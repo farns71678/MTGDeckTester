@@ -241,22 +241,41 @@ function addCardEventListeners(el) {
   el.on('mouseenter', function () {
     const container = $("#widget-deck-flex");
     const vh = container.outerHeight();
+    const vw = container.outerWidth();
     const rect = this.getBoundingClientRect();
     const card = cardMap.get($(this).data('name').toLowerCase());
     let tooltip = $("#img-tooltip-" + card.id);
     const imgRect = tooltip[0].getBoundingClientRect();
-    if ((rect.bottom + rect.top) / 2 < vh / 2) {
-      // card hover down
-      tooltip.css({
-        top: rect.bottom + 6,
-        left: rect.left + container[0].scrollLeft + rect.width / 2 - imgRect.width / 2
-      });
-    } else {
-      // card hover up
-      tooltip.css({
-        left: rect.left + container[0].scrollLeft + rect.width / 2 - imgRect.width / 2,
-        top: rect.top - (imgRect.height + 6)
-      });
+    if ($("#widget-deck-display-container").css("column-count") == 2) {
+      const imgTop = rect.top / vh * (vh - imgRect.height);
+      if (rect.left + container[0].scrollLeft < vw / 2) {
+        // card hover right
+        tooltip.css({
+          top: imgTop + 'px',
+          left: rect.left + container[0].scrollLeft + rect.width + 30 + 'px'
+        });
+      }
+      else {
+        tooltip.css({
+          top: imgTop + 'px',
+          left: rect.left + container[0].scrollLeft - imgRect.width - 30 + 'px'
+        });
+      }
+    }
+    else {
+      if ((rect.bottom + rect.top) / 2 < vh / 2) {
+        // card hover down
+        tooltip.css({
+          top: rect.bottom + 6,
+          left: rect.left + container[0].scrollLeft + rect.width / 2 - imgRect.width / 2
+        });
+      } else {
+        // card hover up
+        tooltip.css({
+          left: rect.left + container[0].scrollLeft + rect.width / 2 - imgRect.width / 2,
+          top: rect.top - (imgRect.height + 6)
+        });
+      }
     }
     tooltip.removeClass("hidden");
   });

@@ -112,15 +112,15 @@ app.use(storageRoutes);
 //mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder
 // //?retryWrites=true&w=majority&appName=Cluster0
 const dbURI = 'mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder';
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+/*mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((result) => {
     app.listen(port);
     console.log(`Example app listening on port ${port}`);
   })
-  .catch((err) => console.log(err));
+  .catch((err) => console.log(err));*/
 
 
-/*app.listen(port, () => {
+app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
-});*/
+});
 

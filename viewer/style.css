@@ -926,6 +926,24 @@ input[type=number].widget-menu-option {
   #widget-name-input {
     min-width: 670px;
   }
+
+  .img-tooltip>img {
+    width: 252px;
+    height: 352px;
+  }
+
+  .img-tooltip.img-layout-split {
+    width: 352px;
+    height: 252px;
+  }
+
+  .img-tooltip.img-layout-split>img {
+    -webkit-transform: rotate(90deg) translate(-50px, -50px); /* Safari */
+    -moz-transform: rotate(90deg) translate(-50px, -50px);    /* Firefox */
+    -ms-transform: rotate(90deg) translate(-50px, -50px);     /* IE */
+    -o-transform: rotate(90deg) translate(-50px, -50px);      /* Opera */
+    transform: rotate(90deg) translate(-50px, -50px);         /* Standard */
+  }
 }
 
 .hidden {
