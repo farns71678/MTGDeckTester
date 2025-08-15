@@ -9,16 +9,18 @@ const { requireAuth, checkUser } = require('./middleware/authMiddleware');
 const app = express();
 const port = 3000;
 
+const USE_DATABASE = true;
+
 //middleware
 //app.use(express.static('public'));
 app.use(express.json());
-app.use(cookieParser);
+app.use(cookieParser());
 
 // Web navigation routes
 
 app.set('view engine', 'ejs');
 
-app.get('*', checkUser);
+if (USE_DATABASE) app.get('*', checkUser);
 
 app.get("/", (req, res) => {
   //res.send('Hello, world!');
@@ -58,10 +60,6 @@ app.use(
   }),
 );
 
-app.use((req, res) => {
-  res.status(404).sendFile("./404.html", { root: __dirname });
-});
-
 
 // routes
 app.use(routes.authRoutes);
@@ -69,21 +67,30 @@ app.use(routes.storageRoutes);
 app.use('/create', routes.createRoutes);
 app.use('/decks', routes.decksRoutes);
 app.use('/viewer', routes.viewerRoutes);
-app.use('/account', routes.accountRoutes);
+
+
+
+app.use((req, res) => {
+  res.status(404).sendFile("./404.html", { root: __dirname });
+});
 
 // database connection
 //mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder
 // //?retryWrites=true&w=majority&appName=Cluster0
-const dbURI = 'mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder';
-/*mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then((result) => {
-    app.listen(port);
+if (USE_DATABASE) {
+  const dbURI = 'mongodb+srv://farnz71678:88LM1zR8SqcBrOYh@cluster0.patbhdu.mongodb.net/mtg-builder';
+  mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then((result) => {
+      const server = app.listen(port);
+      console.log(server.address());
+      console.log(`App listening on port ${port}`);
+    })
+    .catch((err) => console.log(err));
+}
+
+if (!USE_DATABASE) {
+  app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
-  })
-  .catch((err) => console.log(err));*/
-
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+  });
+}
 

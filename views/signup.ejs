@@ -19,7 +19,7 @@
             max-height: 100vh;
             display: flex;
             justify-content: center;
-            background-color: #444;
+            background-color: #222;
             color: #e2e2e2;
             font-family: "Nunito", "Noto Sans", Arial, sans-serif;
         }
@@ -38,32 +38,53 @@
             align-items: center;
         }
 
-        input {
-            max-width: 320px;
-            width: 320px;
+        input[type=text],input[type=email],input[type=password] {
+            max-width: 360px;
+            width: 420px;
             outline: none;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             padding: 6px 8px;
-            font-size: 14pt;
-            background-color: #666;
+            font-size: 15pt;
+            background-color: #3a3a3a;
             transition: all 0.3s ease;
             font-weight: 600;
+            font-size: 12pt;
+            margin: 9px 10px 0px 10px;
+            border-radius: 8px;
+            color: #e2e2e2;
         }
 
         input:hover,input:focus {
-            border-color: #ddd;
+            border-color: #bbb;
+        }
+
+        .form-err {
+            width: 100%;
+            padding: 3px 2px;
+            font-size: 10pt;
+            font-weight: 900;
+            color: #ff2020;
+            font-family: "Nunito", "Noto Sans", Arial, Helvetica, sans-serif;
+            margin-left: 24px;
         }
 
         #form-header {
-            font-size: 15pt;
+            font-size: 18pt;
             font-weight: bold;
+            margin-bottom: 8px;
         }
 
         #submit-btn {
-            background-color: rgb(7, 115, 7);
+            background-color: rgb(27, 135, 27);
             border: none;
-            font-size: 14pt;
+            font-size: 15pt;
             font-weight: 700;
+            color: #e2e2e2;
+            margin: 9px 10px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            transition: all 0.3s ease;
+            margin-top: 16px;
         }
 
         #submit-btn:hover {
@@ -77,13 +98,60 @@
 </head>
 <body>
     <div id="center-column">
-        <form id="sign-up-form">
+        <form id="signup-form">
             <div id="form-header">Create an Account</div>
             <input type="email" name="email" id="email-input" placeholder="Email">
+            <div id="email-err" class="form-err">Email already exists</div>
             <input type="text" name="username" id="username-input" placeholder="Username">
+            <div id="email-err" class="form-err">Username already exists</div>
             <input type="password" name="password" id="passworld-input" placeholder="Password">
+            <div id="email-err" class="form-err">Password min length 8 characters</div>
             <input type="submit" value="Sign Up" id="submit-btn">
         </form>
+        <div id="out"></div>
     </div>
+
+    <script>
+        const emailErr = document.getElementById("email-err");
+        const usernameErr = document.getElementById("username-err");
+        const passwordErr = document.getElementById("password-err");
+        const out = document.getElementById("out");
+
+        $("#signup-form").submit(async (e) => {
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formdata.entries());
+
+            emailErr.textContent = "";
+            usernameErr.textContent = "";
+            passwordErr.textContent = "";
+
+            const email = data.email.trim();
+            const username = data.username;
+            const password = data.password;
+
+            try {
+                const res = await fetch('/signup', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ email, username, password }),
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                console.log(data);
+                $(out).append("<br>" + data);
+                if (data.errors) {
+                    emailErr.textContent = data.errors.email;
+                    usernameErr.textContent = data.errors.username;
+                    passwordErr.textContent = data.errors.password;
+                }
+                if (data.user) {
+                    location.assign('/decks');
+                }
+            }
+            catch (err) {
+                console.log(err);
+                $(out).append("<br>" + err);
+            }
+        });
+    </script>
 </body>
 </html>
