@@ -121,14 +121,15 @@ h2 {
   justify-content: flex-end;
   align-items: stretch;
   width: 240px;
-  height: 280px;
+  height: 200px;
   background-image: url("https://cards.scryfall.io/art_crop/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066");
   background-position: center;
   background-size: cover;
+  border-radius: 4px;
 }
 
 .deck-fade {
-  height: 10%;
+  height: 6%;
   background: linear-gradient(
     360deg,
     rgba(34, 34, 34, 1) 0%,
@@ -137,8 +138,15 @@ h2 {
 }
 
 .deck-details {
-  background-color: #222;
+  background-color: rgba(34, 34, 34, 0.7);
   padding: 4px 6px;
+  transition: flex-grow 0.3s cubic-bezier(0.59, 0.32, 0.36, 1);
+  max-height: 85%;
+  margin-right: 8px;
+}
+
+.deck-container:hover > .deck-details {
+  flex-grow: 1;
 }
 
 #recent-decks-link {
