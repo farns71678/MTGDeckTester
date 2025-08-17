@@ -1,7 +1,4 @@
-const authRoutes = require('./authRoutes');
-const storageRoutes = require('./storageRoutes');
-const createRoutes = require('./createRoutes.js');
-const decksRoutes = require('./decksRoutes.js');
-const viewerRoutes = require('./viewerRoutes.js');
+const authRoutes = require("./authRoutes");
+const storageRoutes = require("./storageRoutes");
 
-module.exports = { authRoutes, storageRoutes, createRoutes, decksRoutes, viewerRoutes };
+module.exports = { authRoutes, storageRoutes };

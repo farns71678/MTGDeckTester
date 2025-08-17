@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
+
+nav,
+nav > * {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  color: #e2e2e2;
+  font-family: "Nunito", Arial, Helvetica, sans-serif;
+}
+
+nav {
+  width: 100%;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  padding: 2px 12px;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #e2e2e2;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+#nav-builder-header {
+  display: flex;
+  margin-right: auto;
+}
+
+#nav-builder-title {
+  font-weight: bold;
+}
+
+#nav-list {
+  list-style-type: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-icon {
+  margin-right: 6px;
+}
+
+.nav-icon > a {
+  text-decoration: none;
+  display: flex;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.nav-icon > a:hover {
+  background-color: rgba(180, 180, 180, 0.3);
+}
+
+.nav-icon > i {
+  font-size: 22pt;
+}
+
+.nav-icon > a > i {
+  font-size: 22pt;
+  color: #aaa;
+}
+
+.nav-icon > a:hover > i {
+  color: #d2d2d2;
+}
+
+#nav-user-icon {
+  display: flex;
+  position: relative;
+}
+
+#nav-user-icon > button > i {
+  font-size: 26pt;
+  cursor: pointer;
+}
+
+#nav-user-icon-btn {
+  border: none;
+  background-color: transparent;
+  display: flex;
+}
+
+#nav-user-icon:focus-within > #nav-user-menu {
+  display: block;
+}
+
+#nav-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -8px;
+  display: none;
+  padding: 4px 4px;
+  background-color: #2d2d2d;
+  border-radius: 3px;
+}
+
+.nav-user-menu-item {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  color: #ddd;
+  font-size: 12pt;
+  min-width: 120px;
+  padding: 3px 4px;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.nav-user-menu-item > i {
+  color: #e2e2e2;
+  margin-right: 8px;
+  font-size: 15pt;
+  transition: all 0.3s ease;
+}
+
+.nav-user-menu-item:hover {
+  color: #e2e2e2;
+  background-color: #3e3e3e;
+}
+
+.nav-user-menu-item:hover > i {
+  color: #00d900;
+}

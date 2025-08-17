@@ -1,66 +1,71 @@
 const User = require("../models/User");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 // handle errors
 const handleErrors = (err) => {
-    console.log(err.message, err.code);
-    let errors = { username: '', password: '' };
+  console.log(err.message, err.code);
+  let errors = { email: "", username: "", password: "" };
 
-    // incorrect username
-    if (err.message === "incorrect username") {
-        errors.username = "That username is not registered";
-    }
+  // incorrect username
+  if (err.message === "incorrect username") {
+    errors.username = "Username not registered";
+  }
 
-    // incorrect password 
-    if (err.message === "incorrect password") {
-        errors.password = "Incorrect password";
-    }
+  // incorrect password
+  if (err.message === "incorrect password") {
+    errors.password = "Incorrect password";
+  }
 
-    // duplicate error code 
-    if (err.code === 11000) {
-        errors.username = "That username is already registered";
-        return errors;
-    }
-
-    // validation errors
-    if (err.message.includes('user validation failed')) {
-        Object.values(err.errors).forEach(({ properties }) => {
-            errors[properties.path] = properties.message;
-        });
-    }
-
+  // duplicate error code
+  if (err.code === 11000) {
+    if (err.message.includes("email"))
+      errors.email = "That email is already registered";
+    else errors.username = "That username is already registered";
     return errors;
-}
+  }
+
+  // validation errors
+  if (err.message.includes("user validation failed")) {
+    Object.values(err.errors).forEach(({ properties }) => {
+      errors[properties.path] = properties.message;
+    });
+  }
+
+  return errors;
+};
 
 const maxAge = 3 * 24 * 60 * 60;
 const createToken = (id) => {
-    return jwt.sign({ id }, 'this is the deck tester/builder or whatever secret', {
-        expiresIn: maxAge
-    });
-}
+  return jwt.sign(
+    { id },
+    "this is the deck tester/builder or whatever secret",
+    {
+      expiresIn: maxAge,
+    }
+  );
+};
 
 module.exports.signup_get = (req, res) => {
-    res.render('signup');
-}
+  res.render("signup");
+};
 
 module.exports.signup_post = async (req, res) => {
-    const { email, username, password } = req.body;
+  const { email, username, password } = req.body;
 
-    try {
-        const user = await User.create({ email, username, password, decks: [] });
-        const token = createToken(user._id);
-        res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
-        res.status(201).json({ user: user._id });
-    }
-    catch (err) {
-        const errors = handleErrors(err);
-        res.status(400).json(errors);
-    }
-}
+  try {
+    const user = await User.create({ email, username, password, decks: [] });
+    const token = createToken(user._id);
+    res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
+    res.status(201).json({ user: user._id });
+  } catch (err) {
+    const errors = handleErrors(err);
+    res.status(400).json({ errors });
+  }
+};
 
 module.exports.login_get = (req, res) => {
-    res.render('login');
-}
+  res.render("login");
+};
 
 module.exports.login_post = async (req, res) => {
   const { username, password } = req.body;
@@ -68,17 +73,15 @@ module.exports.login_post = async (req, res) => {
   try {
     const user = await User.login(username, password);
     const token = createToken(user._id);
-    res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
+    res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
     res.status(200).json({ user: user._id });
-  } 
-  catch (err) {
+  } catch (err) {
     const errors = handleErrors(err);
     res.status(400).json({ errors });
   }
-
-}
+};
 
 module.exports.logout_get = (req, res) => {
-    res.cookie('jwt', "", { maxAge: 1 });
-    res.redirect('/');
-}
+  res.cookie("jwt", "", { maxAge: 1 });
+  res.redirect("/");
+};

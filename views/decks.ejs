@@ -1,69 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MTG Deck Tester - Your Decks</title>
 
-    <link rel="stylesheet" href="./decks/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="./decks/app.js" defer></script>
-</head>
-<body>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <% let decknum = 12; %> <%- include('partials/nav'); -%>
 
-    <% let decknum = 12; %>
-
-    <nav>
-        <div id="nav-title">MTG Deck Builder</div>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/create">Create</a></li>
-        </ul>
-    </nav>
-
-    <div id="flex-container">
-        <% for (let i = 0; i < decknum; i++) { %>
-            <div class="deck-container">
-                <div class="deck-image"></div>
-                <div class="deck-body">
-                    <div class="deck-flex deck-title-row">
-                        <h2 class="deck-title">Cool Deck</h2>
-                        <div class="deck-count-container">30/100</div>
-                    </div>
-                    <hr>
-                    <div class="deck-flex format-flex">
-                        <h3 class="deck-format">Commander</h3>
-                        <div class="legal-icon-container">
-                            <i class="bx bx-error legal-icon"></i>
-                            <div class="legal-text">Not Legal</div>
-                        </div>
-                    </div>
-                    <div class="deck-legal-errors">
-                        <hr style="margin-bottom: 6px;">
-                        <div class="legal-err" style="--i:0;">Too few cards. </div>
-                        <div class="legal-err" style="--i:1;">Contains cards not legal in format. </div>
-                        <div class="legal-err" style="--i:2;">Too many instances of a card. </div>
-                    </div>  
-                    <div class="deck-btn-flex">
-                        <i class="bx bx-arrow-back">
-                            <div class="tooltip" style="display: none;">Return</div>
-                        </i>
-                        <i class="bx bx-git-repo-forked">
-                            <div class="tooltip">Fork</div>
-                        </i>
-                        <i class="bx bx-share-alt">
-                            <div class="tooltip">Share</div>
-                        </i>
-                        <i class="bx bx-edit">
-                            <div class="tooltip">Edit</div>
-                        </i>
-                    </div>
-                </div>
+    <div id="main-container">
+      <div id="tools-column">
+        <div id="create-btn">Create <i class="bx bx-plus"></i></div>
+        <div class="tool-column-item current-page">
+          <i class="bx bx-list-ul"></i> My Decks
+        </div>
+        <div class="tool-column-item">
+          <i class="bx bx-time-five"></i> Recent
+        </div>
+        <!--<div class="tool-column-item">
+          <i class="bx bx-import"></i> Import Deck
+        </div>-->
+        <div class="tool-column-item">
+          <i class="bx bx-collection"></i> Collection
+        </div>
+        <div class="tool-column-item"><i class="bx bxs-cog"></i> Settings</div>
+        <div class="tool-column-item">
+          <i class="bx bx-info-circle"></i> Info
+        </div>
+        <div class="tool-column-item">
+          <i class="bx bx-help-circle"></i> Help
+        </div>
+      </div>
+      <div id="decks-column">
+        <h1>Welcome,</h1>
+        <h2>Recent</h2>
+        <div id="recent-container" class="deck-list-container">
+          <div class="deck-container">
+            <div class="deck-fade"></div>
+            <div class="deck-details">
+              <div class="deck-name">RAKDOS RETREIVAL</div>
             </div>
-        <% } %>
+          </div>
+        </div>
+        <a href="./recent" id="recent-decks-link">Recent Decks</a>
+        <h2>All</h2>
+        <div id="all-container" class="deck-list-container"></div>
+      </div>
     </div>
 
-</body>
+    <!--<div id="flex-container">
+      <% for (let i = 0; i < decknum; i++) { %>
+      <div class="deck-container">
+        <div class="deck-image"></div>
+        <div class="deck-body">
+          <div class="deck-flex deck-title-row">
+            <h2 class="deck-title">Cool Deck</h2>
+            <div class="deck-count-container">30/100</div>
+          </div>
+          <hr />
+          <div class="deck-flex format-flex">
+            <h3 class="deck-format">Commander</h3>
+            <div class="legal-icon-container">
+              <i class="bx bx-error legal-icon"></i>
+              <div class="legal-text">Not Legal</div>
+            </div>
+          </div>
+          <div class="deck-legal-errors">
+            <hr style="margin-bottom: 6px" />
+            <div class="legal-err" style="--i: 0">Too few cards.</div>
+            <div class="legal-err" style="--i: 1">
+              Contains cards not legal in format.
+            </div>
+            <div class="legal-err" style="--i: 2">
+              Too many instances of a card.
+            </div>
+          </div>
+          <div class="deck-btn-flex">
+            <i class="bx bx-arrow-back">
+              <div class="tooltip" style="display: none">Return</div>
+            </i>
+            <i class="bx bx-git-repo-forked">
+              <div class="tooltip">Fork</div>
+            </i>
+            <i class="bx bx-share-alt">
+              <div class="tooltip">Share</div>
+            </i>
+            <i class="bx bx-edit">
+              <div class="tooltip">Edit</div>
+            </i>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>-->
+  </body>
 </html>
