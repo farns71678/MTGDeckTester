@@ -1,36 +1,68 @@
 $(document).ready(() => {
-    $(".deck-btn-flex>i>.tooltip").each((i, obj) => {
-        let rect = obj.getBoundingClientRect();
-        obj.style.marginLeft = ( -1 * rect.width / 2) + 'px';
-    });
 
-    $(".legal-icon-container").on("click", (event) => {
-        $(event.target.parentNode.parentNode.parentNode).toggleClass("legal-view");
-    });
-
-    $(".deck-btn-flex>.bx-arrow-back").on("click", (event) => {
-        $(event.target.parentNode.parentNode).removeClass("legal-view");
-    });
-
-    $(".legal-icon-container").hover((event) => {
+    $("#create-from-load").on("click", (event) => {
         event.preventDefault();
-        let parent = event.target;
-        if (event.target.tagName == "I" || 
-            event.target.classList.contains("legal-text")
-        ) parent = event.target.parentNode;
-        $(parent.children[0]).toggleClass("bxs-error");
-        $(parent.children[0]).toggleClass("bx-error");
-        $(parent.children[1]).toggleClass("hover");
+        $("#deck-file-load").trigger("click");
     });
 
-    $(".deck-btn-flex>i").on("mouseenter", (event) => {
-        let next = event.target.children[0];
-        let rect = next.getBoundingClientRect();
-        next.style.marginLeft = ( -1 * rect.width / 2);
+    $("#deck-file-load").on("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const content = e.target.result;
+                try {
+                    const deckData = JSON.parse(content);
+                    if (deckData && deckData.cards && deckData.cards.length > 0) {
+                        const deck = {
+                            name: deckData.name || "Untitled Deck",
+                            format: deckData.format,
+                            cards: deckData.cards.map(card => ({
+                                scryfallId: card.id,
+                                count: card.count || 1,
+                                sideboard: card.sideboard || false
+                            }))
+                        };
+                        const response = await fetch('/createdeck', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(deck)
+                            });
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            displayError(errorText);
+                            return;
+                        }
+                        location.href = "/decks";
+                    } 
+                    else {
+                        displayError("Invalid deck file format. Make sure the file is valid JSON and contains a 'cards' array.");
+                    }
+                } 
+                catch (error) {
+                    displayError(error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
     });
 
-    $(".deck-btn-flex>i.bx-edit").on("click", (event) => {
+    $("#error-back").on("click", (event) => {
         event.preventDefault();
-        window.open("../create", "_blank");
+        switchMessage("no-decks-container");
     });
 });
+
+function displayError(msg) {
+    $("#error-msg").text(msg);
+    switchMessage("error-msg-container");
+}
+
+function switchMessage(id) {
+    $(".center-msg").addClass("hidden");
+    $("#" + id).removeClass("hidden");
+}
+
+function editDeck(url) {
+    window.location = url;
+}

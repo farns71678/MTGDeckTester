@@ -84,6 +84,7 @@ const scryfallUrl = "https://api.scryfall.com/cards/";
 const filterCardData = (card) => {
   return { 
     id: card.id, 
+    object: card.object,
     name: card.name, 
     layout: card.layout, 
     image_uris: card.image_uris, 

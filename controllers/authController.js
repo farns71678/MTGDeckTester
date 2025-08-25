@@ -46,6 +46,7 @@ const createToken = (id) => {
 };
 
 module.exports.signup_get = (req, res) => {
+  if (res.locals.user) return res.redirect('/decks');
   res.render("signup");
 };
 
@@ -64,6 +65,7 @@ module.exports.signup_post = async (req, res) => {
 };
 
 module.exports.login_get = (req, res) => {
+  if (res.locals.user) return res.redirect('/decks');
   res.render("login");
 };
 

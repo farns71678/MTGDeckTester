@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
 
 :root {
@@ -32,6 +33,7 @@ body {
   flex-grow: 1;
   width: 100%;
   display: flex;
+  overflow-y: auto;
 }
 
 #tools-column {
@@ -97,6 +99,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  overflow-y: auto;
 }
 
 h1 {
@@ -115,6 +118,8 @@ h2 {
 }
 
 .deck-container {
+  --transition-time: 0.3s;
+  --transition-ease: cubic-bezier(0.59, 0.32, 0.36, 1);
   background-color: #222;
   display: flex;
   flex-direction: column;
@@ -122,31 +127,110 @@ h2 {
   align-items: stretch;
   width: 240px;
   height: 200px;
-  background-image: url("https://cards.scryfall.io/art_crop/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066");
+  background-image: url("../art_crop/front/a/1/a1b6f13e-63d0-46bf-aa57-23c2dbdf62dd.jpg?1686969973");
   background-position: center;
   background-size: cover;
   border-radius: 4px;
+  margin-right: 8px;
+  margin-top: 8px;
+}
+
+.deck-container i {
+  font-size: 14pt;
 }
 
 .deck-fade {
-  height: 6%;
+  height: 8%;
   background: linear-gradient(
     360deg,
-    rgba(34, 34, 34, 1) 0%,
+    rgba(34, 34, 34, 0.8) 0%,
     rgba(34, 34, 34, 0) 100%
   );
+  transition: height var(--transition-time) var(--transition-ease);
 }
 
 .deck-details {
-  background-color: rgba(34, 34, 34, 0.7);
+  background-color: rgba(34, 34, 34, 0.8);
   padding: 4px 6px;
-  transition: flex-grow 0.3s cubic-bezier(0.59, 0.32, 0.36, 1);
-  max-height: 85%;
-  margin-right: 8px;
+  transition: all var(--transition-time) var(--transition-ease);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  position: relative;
+  transition: height 0.3s ease;
 }
 
-.deck-container:hover > .deck-details {
-  flex-grow: 1;
+.deck-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: -2px;
+}
+
+.deck-name {
+  font-family: "Share Tech", "Nunito", Arial, Helvetica, sans-serif;
+  transition: max-width var(--transition-time) var(--transition-ease);
+  white-space: nowrap;
+  overflow-x: hidden;
+  font-size: 13pt;
+  margin-bottom: -4px;
+}
+
+.deck-count {
+  margin-left: auto;
+  font-weight: bold;
+}
+
+.deck-format-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.deck-format {
+  font-family: "Share Tech", "Nunito", "Noto Sans", Arial, Helvetica, sans-serif;
+  color: #bbb;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+.bx-check {
+  color: rgb(18, 170, 18);
+}
+
+.deck-icon-row {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.deck-icon-row i {
+  color: #bbb;
+  padding: 4px;
+  border-radius: 13px;
+}
+
+.deck-icon-row i:hover {
+  color: #e2e2e2;
+  background-color: rgba(200, 200, 200, 0.2);
+  cursor: pointer;
+}
+
+.deck-color-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+
+.deck-color-row>.deck-color {
+  margin-bottom: 3px;
+}
+
+.deck-flex-last {
+  margin-right: auto;
 }
 
 #recent-decks-link {
@@ -161,11 +245,183 @@ h2 {
   background-color: #2e2e2e;
 }
 
+div.deck-init-hidden {
+  /* display: none;*/
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.deck-container:hover div.deck-init-hidden {
+  /* display: flex; */
+  max-height: 100%;
+}
+
+.deck-count {
+  color: #ffffda;
+}
+
+#center-msg-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+#no-decks-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+#no-decks-text,#loading-msg,#loading-err-msg,#error-msg {
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 12px;
+  font-size: 16pt;
+  text-align: center;
+}
+
+#loading-err-msg {
+  color: rgb(207, 29, 29);
+}
+
+#error-msg {
+  color: rgb(207, 29, 29);
+}
+
+#create-from-blank {
+  display: inline-block;
+  text-decoration: none;
+  background-color: rgb(18, 150, 18);
+  padding: 10px 10px;
+  border-radius: 10px;
+  font-size: 14pt;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 6px;
+}
+
+#create-from-load {
+  background-color: transparent;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 14pt;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 4px solid #666;
+  color: #666;
+  margin: 0 6px;
+}
+
+#err-msg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#error-back {
+  background-color: transparent;
+  padding: 10px 10px;
+  border-radius: 10px;
+  font-size: 14pt;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 4px solid rgb(207, 29, 29);
+  color: rgb(207, 29, 29);
+}
+
+#error-back:hover {
+  background-color: rgba(207, 29, 29, 0.1);
+}
+
+#create-load-btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#create-from-load:hover {
+  border-color: #888;
+  background-color: #99999940;
+  color: #888;
+}
+
+
+#create-from-blank:hover {
+  background-color: rgb(7, 115, 7);
+}
+
+.deck-edit-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
+#deck-file-load {
+  display: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
 @media only screen and (max-width: 950px) {
   .tool-column-item {
     min-width: 220px;
   }
 }
+
+.card-symbol-W {
+  background-image: url("/images/whiteMana.svg");
+}
+
+.card-symbol-U {
+  background-image: url("/images/blueMana.svg");
+}
+
+.card-symbol-B {
+  background-image: url("/images/blackMana.svg");
+}
+
+.card-symbol-R {
+  background-image: url("/images/redMana.svg");
+}
+
+.card-symbol-G {
+  background-image: url("/images/greenMana.svg");
+}
+
+.card-symbol-C {
+  background-image: url("/images/colorlessMana.svg");
+}
+
+.deck-color {
+  display: inline-block;
+  margin: 1px 1.5px -1px 1.5px;
+  -webkit-border-radius: 500px;
+  border-radius: 500px;
+  text-indent: -999em;
+  overflow: hidden;
+  width: 16px;
+  height: 16px;
+  -webkit-background-size: 100% 100%;
+  background-size: 100% 100%;
+  background-position: top left;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 
 /*
 

@@ -15,7 +15,8 @@
     <script src="./app.js" defer></script>
   </head>
   <body>
-    <% let decknum = 12; %> <%- include('partials/nav'); -%>
+    <%- include('partials/nav'); -%>
+
 
     <div id="main-container">
       <div id="tools-column">
@@ -41,78 +42,31 @@
         </div>
       </div>
       <div id="decks-column">
-        <h1>Welcome,</h1>
-        <h2>Recent</h2>
-        <div id="recent-container" class="deck-list-container">
-          <div class="deck-container">
-            <div class="deck-fade"></div>
-            <div class="deck-details">
-              <div class="deck-name">BOROS INSIGNIA</div>
+        <h1>Welcome, <span id="username-welcome"><%= user.username %></span></h1>
+         
+        <div id="center-msg-container">
+        <% if (user.decks.length > 0) { %>
+            <script src="./loader.js"></script>
+            <div id="loading-msg" class="center-msg">Loading Decks</div>
+            <div id="loading-err-msg" class="center-msg hidden">There was an error retreiving decks. Unable to load your decks. Please try again latter. </div>
+
+        <% } else { %>
+            <div id="no-decks-container" class="center-msg">
+              <div id="no-decks-text">It looks like you don't have any decks yet. Create a new deck to get started. </div>
+              <div id="create-load-btn-container">
+                <a id="create-from-blank" href="/create">Create New</a>
+                <div id="create-from-load">Load Deck</div>
+              </div>
             </div>
-          </div>
-          <div class="deck-container">
-            <div class="deck-fade"></div>
-            <div class="deck-details">
-              <div class="deck-name">BOROS INSIGNIA</div>
+            <div id="error-msg-container" class="hidden">
+              <div id="error-msg"></div>
+              <div id="error-back">Okay</div>
             </div>
-          </div>
-          <div class="deck-container">
-            <div class="deck-fade"></div>
-            <div class="deck-details">
-              <div class="deck-name">BOROS INSIGNIA</div>
-            </div>
-          </div>
+        <% } %>
         </div>
-        <a href="./recent" id="recent-decks-link">Recent Decks</a>
-        <h2>All</h2>
-        <div id="all-container" class="deck-list-container"></div>
       </div>
     </div>
 
-    <!--<div id="flex-container">
-      <% for (let i = 0; i < decknum; i++) { %>
-      <div class="deck-container">
-        <div class="deck-image"></div>
-        <div class="deck-body">
-          <div class="deck-flex deck-title-row">
-            <h2 class="deck-title">Cool Deck</h2>
-            <div class="deck-count-container">30/100</div>
-          </div>
-          <hr />
-          <div class="deck-flex format-flex">
-            <h3 class="deck-format">Commander</h3>
-            <div class="legal-icon-container">
-              <i class="bx bx-error legal-icon"></i>
-              <div class="legal-text">Not Legal</div>
-            </div>
-          </div>
-          <div class="deck-legal-errors">
-            <hr style="margin-bottom: 6px" />
-            <div class="legal-err" style="--i: 0">Too few cards.</div>
-            <div class="legal-err" style="--i: 1">
-              Contains cards not legal in format.
-            </div>
-            <div class="legal-err" style="--i: 2">
-              Too many instances of a card.
-            </div>
-          </div>
-          <div class="deck-btn-flex">
-            <i class="bx bx-arrow-back">
-              <div class="tooltip" style="display: none">Return</div>
-            </i>
-            <i class="bx bx-git-repo-forked">
-              <div class="tooltip">Fork</div>
-            </i>
-            <i class="bx bx-share-alt">
-              <div class="tooltip">Share</div>
-            </i>
-            <i class="bx bx-edit">
-              <div class="tooltip">Edit</div>
-            </i>
-          </div>
-        </div>
-      </div>
-      <% } %>
-    </div>-->
+    <input type="file" name="file" id="deck-file-load" accept="application/json">
   </body>
 </html>

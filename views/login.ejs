@@ -103,6 +103,14 @@
       #submit-btn:focus {
         background-color: rgb(5, 80, 5);
       }
+
+      #signup-link {
+        margin-top: 16px;
+      }
+
+      #signup-link a {
+        color: #008dd3;
+      }
     </style>
   </head>
   <body>
@@ -128,6 +136,7 @@
           <div id="password-err" class="form-err"></div>
         </div>
         <input type="submit" value="Log In" id="submit-btn" />
+        <p id="signup-link">Don't have an account? <a href="/signup">Sign up.</a></p>
       </form>
       <div id="out"></div>
     </div>
@@ -158,7 +167,7 @@
           const data = await res.json();
           console.log(JSON.stringify(data));
           if (data.errors) {
-            $(out).append("<br>" + JSON.stringify(data.errors));
+            //$(out).append("<br>" + JSON.stringify(data.errors));
             usernameErr.textContent = data.errors.username;
             passwordErr.textContent = data.errors.password;
           }
@@ -167,7 +176,7 @@
           }
         } catch (err) {
           console.log(err);
-          $(out).append("<br>" + JSON.stringify(err));
+          //$(out).append("<br>" + JSON.stringify(err));
         }
       });
     </script>

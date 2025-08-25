@@ -41,6 +41,7 @@ const scryfallCardProxy = proxy("https://api.scryfall.com/", {
 
 app.use("/png/*", scryfallImageProxy);
 app.use("/normal/*", scryfallImageProxy);
+app.use("/art_crop/*", scryfallImageProxy);
 
 app.use("/cards/*", scryfallCardProxy);
 
@@ -65,11 +66,21 @@ app.use(routes.authRoutes);
 app.use(routes.storageRoutes);
 
 app.get("/decks", requireAuth, checkUser, (req, res) => {
-  res.render("decks");
+  if (!res.locals.user) return res.redirect("/login");
+  res.render("decks", { user: res.locals.user });
 });
 
-app.get("/create", requireAuth, checkUser, (req, res) => {
-  res.render("create");
+app.get("/create", checkUser, (req, res) => {
+  res.render("create", { user: res.locals.user });
+});
+
+app.get("/:username/:deckId", checkUser, (req, res) => {
+  const { username, deckId } = req.params;
+  if (res.locals.user && res.locals.user.username != username)
+    res.render("create", { user: res.locals.user, edit: false, deckId: deckId });
+  else if (res.locals.user && res.locals.user.username == username)
+    res.render("create", { user: res.locals.user, edit: true, deckId: deckId });
+  else res.render("create", { user: null, deckId: deckId });
 });
 
 //app.use("/decks", express.static(__dirname + "/decks"));
