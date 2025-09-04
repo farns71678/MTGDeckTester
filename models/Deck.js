@@ -12,6 +12,9 @@ const deckCardSchema = new mongoose.Schema({
     index: {
         type: Number
     },
+    sideboard: {
+        type: Number
+    },
     scryfallId: {
         type: String,
         required: true
@@ -23,9 +26,6 @@ const deckSchema = new mongoose.Schema({
         type: [deckCardSchema],
         required: true,
         validate: [(val) => val.length > 0, "Deck must contain cards. "]
-    },
-    sideboard: {
-        type: [deckCardSchema],
     },
     format: {
         type: mongoose.Schema.Types.Int32,
@@ -125,14 +125,14 @@ async function presaveDeck(deck) {
             }
 
             // handle sideboard cards
-            if (card.sideboard) {
+            /*if (card.sideboard) {
                 // remove from main deck
                 deck.cards.splice(i, 1);
                 // add to sideboard
                 if (deck.sideboard == null || deck.sideboard == undefined) deck.sideboard = [];
                 deck.sideboard.push(card);
                 i--;
-            }
+            }*/
             
         }
         else {

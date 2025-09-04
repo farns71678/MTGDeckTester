@@ -23,9 +23,10 @@ module.exports.createDeck = async (req, res) => {
         let user = res.locals.user;
         deck.owner = user._id;
         await presaveDeck(deck);
-        const doc = await Deck.create(deck);
+        let doc = await Deck.create(deck).lean();
+        doc.count = getDeckCardTotal(doc);
         await user.updateOne({ $push: { decks: doc._id } });
-        res.send('success');
+        res.send(JSON.stringify({ deck: doc, username: user.username}));
     }
     catch (err) {
         console.log(err);
@@ -34,13 +35,16 @@ module.exports.createDeck = async (req, res) => {
 }
 
 module.exports.saveDeck = async (req, res) => {
-    let newDeck = { _id, cards, format, public, name, description, backgroundUrl } = req.body;
-    
+    const newDeck = { _id, cards, format, public, name, description, sideboard, backgroundUrl } = req.body;
+
     try {
         const deck = await Deck.findOne({ _id: newDeck._id });
         if (deck.owner == res.locals.user._id) {
-            await presaveDeck(newDeck);
-            await newDeck.save();
+            Object.keys(newDeck).forEach(key => {
+                if (key != '_id' && newDeck[key] != null) deck[key] = newDeck[key];
+            });
+            await presaveDeck(deck);
+            await deck.save();
         }
         else res.status(401).send("You do not own this deck. ");
         res.send("success");
@@ -66,16 +70,16 @@ module.exports.deleteDeck = async (req, res) => {
 };
 
 module.exports.deckInfo = async (req, res) => {
-    const _id = req.query._id;
+    const { _id, retreiveData } = req.query;
 
     try {
-        const deck = await Deck.findOne({ _id });
+        const deck = await Deck.findOne({ _id }).lean();
         if (deck.private != undefined && deck.private != null && deck.private == true) {
             if (res.locals.user == null || (res.locals.user != null && res.locals.user._id != deck.owner))
                 res.status(401).send("You do not have permission to view this deck. ");
-            else res.send(JSON.stringify(deck));
+            else res.send(JSON.stringify(await parseDeckInfo(deck, retreiveData == 'true')));
         }
-        res.send(JSON.stringify(deck));
+        res.send(JSON.stringify(await parseDeckInfo(deck, retreiveData == 'true')));
     }
     catch (err) {
         console.log("Error retreiving deck: ", err.message);
@@ -99,16 +103,37 @@ module.exports.deckList = async (req, res) => {
     try {
         let decks = [];
         for (let i = 0; i < user.decks.length; i++) {
-            const doc = await Deck.findOne({ _id: user.decks[i] });
+            const doc = await Deck.findOne({ _id: user.decks[i] }).lean();
             //doc.count = getDeckCardTotal(doc);
             //console.log(doc);
             decks.push({ _id: doc._id, name: doc.name, format: doc.format, formatErrors: doc.formatErrors, colors: doc.colors, description: doc.description, count: getDeckCardTotal(doc), public: doc.public, backgroundUrl: doc.backgroundUrl, updatedAt: doc.updatedAt, createdAt: doc.createdAt  });
         }
-        console.log(decks);
         res.send(JSON.stringify({ decks, username: user.username }));
     }
     catch (err) {
         console.log("Error retreiving deck list: ", err.message);
         res.status(500).send("Unable to retreive deck list");
     }
+}
+
+async function parseDeckInfo(deck, retrieveData) {
+    if (retrieveData) {
+        try {
+            let promises = [];
+            deck.cards.forEach((card, index) => {
+                promises.push(fetch(`https://api.scryfall.com/cards/${card.scryfallId}`)
+                    .then(res => res.json())
+                    .catch(err => { throw new Error("Error fetching card data") }));
+            });
+            await Promise.allSettled(promises).then((results) => { promises = results.map(result => result.value); });
+            for (let i = 0; i < deck.cards.length; i++) {
+                deck.cards[i] = { ...deck.cards[i], ...promises[i] };
+            }
+            return deck;
+        }
+        catch(err) {
+            throw new Error("Error parsing deck");
+        }
+    }
+    return deck;
 }

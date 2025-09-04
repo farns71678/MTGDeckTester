@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +10,9 @@
       href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
       rel="stylesheet"
     />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="./app.js" defer></script>
   </head>
@@ -43,7 +45,31 @@
       </div>
       <div id="decks-column">
         <h1>Welcome, <span id="username-welcome"><%= user.username %></span></h1>
-         
+        
+        <div id="decks-tool-bar">
+          <div id="search-container">
+            <i class="bx bx-search"></i>
+            <input
+              type="text"
+              id="deck-search"
+              placeholder="Search decks..."
+            />
+            <i class="bx bx-x" id="clear-search"></i>
+            <i class="bx bx-import" id="load-deck"></i>
+          </div>
+          <div id="sort-container">
+            Sort by:
+            <select id="sort-select">
+              <option value="recent" selected>Recent</option>
+              <option value="name">Name</option>
+              <option value="format">Format</option>
+              <option value="color">Color</option>
+              <option value="legal">Legal</option>
+            </select>
+            <i class="bx bx-sort-up" id="sort-direction"></i>
+          </div>
+        </div>
+
         <div id="center-msg-container">
         <% if (user.decks.length > 0) { %>
             <script src="./loader.js"></script>
@@ -68,5 +94,37 @@
     </div>
 
     <input type="file" name="file" id="deck-file-load" accept="application/json">
+
+    <!--<div id="modal-container" class="hidden container">
+      <div id="delete-deck-dialog" class="modal-dialog hidden">
+        <button type="button" class="btn-close modal-close-btn" aria-label="Close"></button>
+        <h1>Warning</h1>
+        <p>This action is irreversible. Are you sure you want to delete deck "<span id="delete-deck-name"></span>"?</p>
+        <p class="error"></p>
+        <div id="d-flex justify-content-md-center">
+          <button type="button" id="delete-deck-btn" class="btn-outline-warning" data-deck-id="">Delete</button>
+          <button type="button" id="delete-deck-cancel-btn" class="cancel-btn btn-outline-secondary modal-close-btn">Cancel</button>
+        </div>
+      </div>
+    </div>-->
+
+    <div id="delete-deck-dialog" class="modal fade" tabindex="-1">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Deck</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Warning!</strong> This action is irreversible. Are you sure you want to delete deck "<span id="delete-deck-name"></span>"?</p>
+            <p class="error"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="delete-deck-cancel-btn" class="cancel-btn btn btn-outline-secondary modal-close-btn" data-bs-dismiss="modal">Close</button>
+            <button type="button" id="delete-deck-btn" class="btn btn-outline-warning" data-deck-id="${ deck._id }">Delete Deck</button>
+          </div>
+        </div>
+      </div>
+    </div>    
   </body>
 </html>

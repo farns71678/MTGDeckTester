@@ -1,10 +1,24 @@
-let formatOption = document.getElementById("format-option");
-let cardContainer = document.querySelector(
-  "#card-display-container>#display-flex",
-);
-let searchBar = document.getElementById("search-input");
-let scryfallBar = document.getElementById("scryfall-input");
-let commanderImages = document.querySelectorAll(".commander-display-image");
+/**
+ * Feature List:
+ *  - Search bar with autocomplete and advanced search options
+ *  - Search section with several pages
+ *  - Sideboard section
+ *  - Connection to database to save decks
+ *  - Card group counts
+ *  - Auto columns based on screen size
+ *  - drag to scroll
+ * 
+ * Bug List:
+ *  - MSEdge image thing messes up hover
+ *  - Dragging cards don't have max or min
+ *  - If some dude messes with scryfall database, images might not load -> page will not load
+ */
+
+let formatOption = null;
+let cardContainer = null;
+let searchBar = null;
+let scryfallBar = null;
+let commanderImages = null;
 let formats = [
   { name: "standard", singleton: false, size: 60 },
   { name: "modern", singleton: false, size: 60 },
@@ -20,7 +34,7 @@ let formats = [
 
 let sheet = document.styleSheets[0];
 let rules = sheet.cssRules;
-const PROXY_ON = false;
+const PROXY_ON = true;
 
 //console.log(rules[rules.length - 1]);
 
@@ -40,6 +54,7 @@ let newX = 0;
 let newY = 0;
 let grabbedImage = null;
 let shifftedImage = false;
+let savePromise = null;
 
 colorData.set("W", { name: "white", symbol: "{W}", order: 0 });
 colorData.set("U", { name: "blue", symbol: "{U}", order: 1 });
@@ -75,164 +90,163 @@ for (let i = 0; i < numberStrings.length; i++) {
   numberStringMap.set(numberStrings[i], i);
 }
 
-formats.forEach((format) => {
-  formatOption.innerHTML += `<option value="${format.name}">${
-    format.name.charAt(0).toUpperCase() + format.name.slice(1)
-  }</option>`;
-});
-$("#format-collapsed-info").html($("#format-option").val().toUpperCase());
-refreshDeckColors();
-refreshDeckCardCount();
-refreshSections();
+function pathToSelf(url) {
+  const obj = new URL(url);
+  return obj.pathname + obj.search;
+}
 
-$(".card-container").each((indexed, obj) => {
-  let name = $(obj).attr("data-name");
-  let card = loadedCards.find((item) => item.name == name);
+$(document).ready(async () => {
+  formatOption = document.getElementById("format-option");
+  cardContainer = document.querySelector(
+    "#card-display-container>#display-flex",
+  );
+  searchBar = document.getElementById("search-input");
+  scryfallBar = document.getElementById("scryfall-input");
+  commanderImages = document.querySelectorAll(".commander-display-image");
+  
+  // formats
+  refreshDeckColors();
+  refreshDeckCardCount();
+  refreshSections();
 
-  if (card != null && card != undefined) {
-    deckSize += card.count;
-  }
-});
+  $(".card-container").each((indexed, obj) => {
+    let name = $(obj).attr("data-name");
+    let card = loadedCards.find((item) => item.name == name);
 
-$("#search-form").submit(function (event) {
-  event.preventDefault();
-  let searchInput = (scryfallBar.textContent.length > 0 ? scryfallBar.textContent : $(searchBar).val().trim());
-  if (searchInput == "" || searchInput == "\\") return;
-  $("#search-err").text("");
-  $(".search-card").remove();
-  $("#no-cards-container").addClass("hidden");
-  $("#search-loading-container").removeClass("hidden");
-  let searchUrl = null;
-  if (PROXY_ON) {
-    searchUrl =
-      searchInput[0] == "\\"
-        ? "../search?unique=cards&q=" +
-          searchInput.substr(1) +
-          "&order=released"
-        : "../search?unique=cards&q=name:/.*" +
-          searchInput +
-          ".*/ f:" +
-          currentFormat.name +
-          "&order=released";
-  } else {
-    searchUrl =
-      searchInput[0] == "\\"
-        ? "https://api.scryfall.com/cards/search?unique=cards&q=" +
-          searchInput.substr(1) +
-          "&order=released"
-        : "https://api.scryfall.com/cards/search?unique=cards&q=name:/.*" +
-          searchInput +
-          ".*/ f:" +
-          currentFormat.name +
-          "&order=released";
-  }
-  console.log(searchUrl);
-  $.ajax({
-    url: searchUrl,
-    type: "GET",
-    success: function (cards) {
-      $("#search-loading-container").addClass("hidden");
-      if (cards.object == "list" && cards.total_cards > 0) {
-        cards.data = cards.data.filter(
-          (card) =>
-            card.legalities != null &&
-            card.legalities != undefined &&
-            card.legalities[currentFormat.name] != "not_legal",
-        );
-        if (cards.data.length == 0) {
+    if (card != null && card != undefined) {
+      deckSize += card.count;
+    }
+  });
+
+  $("#search-form").submit(function (event) {
+    event.preventDefault();
+    let searchInput = (scryfallBar.textContent.length > 0 ? scryfallBar.textContent : $(searchBar).val().trim());
+    if (searchInput == "" || searchInput == "\\") return;
+    $("#search-err").text("");
+    $(".search-card").remove();
+    $("#no-cards-container").addClass("hidden");
+    $("#search-loading-container").removeClass("hidden");
+    let searchUrl = null;
+    if (PROXY_ON) {
+      searchUrl =
+        searchInput[0] == "\\"
+          ? "../search?unique=cards&q=" +
+            searchInput.substr(1) +
+            "&order=released"
+          : "../search?unique=cards&q=name:" +
+            searchInput +
+            " f:" + currentFormat.name + "&order=released";
+    } else {
+      searchUrl =
+        searchInput[0] == "\\"
+          ? "https://api.scryfall.com/cards/search?unique=cards&q=" +
+            searchInput.substr(1) +
+            "&order=released"
+          : "https://api.scryfall.com/cards/search?unique=cards&q=name:" +
+            searchInput +
+            " f:" + currentFormat.name + "&order=released";
+    }
+    console.log(searchUrl);
+    $.ajax({
+      url: searchUrl,
+      type: "GET",
+      success: function (cards) {
+        $("#search-loading-container").addClass("hidden");
+        if (cards.object == "list" && cards.total_cards > 0) {
+          cards.data = cards.data.filter(
+            (card) =>
+              card.legalities != null &&
+              card.legalities != undefined &&
+              card.legalities[currentFormat.name] != "not_legal",
+          );
+          if (cards.data.length == 0) {
+            //$("#search-err").html("No cards found.");
+            $("#no-cards-container").removeClass("hidden");
+          }
+
+          cards.data.forEach((card) => {
+            if (
+              card.object == "card" &&
+              card.image_uris != undefined &&
+              card.image_uris.normal != undefined &&
+              card.image_uris.normal != null &&
+              card.legalities != null &&
+              card.legalities != undefined &&
+              card.legalities[currentFormat.name] != "not_legal"
+            ) {
+              let cardEl = null;
+              if (PROXY_ON) {
+                cardEl = $(
+                  "<img src='" +
+                    pathToSelf(card.image_uris.normal) +
+                    "' class='search-card'>",
+                );
+              } else {
+                cardEl = $(
+                  "<img src='" +
+                    card.image_uris.normal +
+                    "' class='search-card'>",
+                );
+              }
+
+              cardEl.on("click", function (event) {
+                event.preventDefault();
+
+                let loadedCard = findLoadedCard(card.name);
+
+                if (loadedCard == null || loadedCard == undefined) {
+                  let cardMax = cardCountMax(card, false);
+                  if (cardMax == -1) card.count = 10;
+                  else card.count = cardMax;
+                  let foundCard = loadedCards.find(
+                    (item) => item.name === card.name,
+                  );
+                  if (foundCard != null && foundCard != undefined) {
+                    foundCard.count = card.count;
+                    foundCard.commander = false;
+                  } else {
+                    loadedCards.push(card);
+                  }
+                  addCard(card);
+                } else if (loadedCard.count <= 0) {
+                  let cardMax = cardCountMax(card, false);
+                  if (cardMax == -1) card.count = 10;
+                  else card.count = cardMax;
+                  loadedCard.count = card.count;
+                  addCard(card);
+                }
+              });
+
+              $("#search-section").append(cardEl);
+            }
+          });
+        } else {
           //$("#search-err").html("No cards found.");
           $("#no-cards-container").removeClass("hidden");
         }
-
-        cards.data.forEach((card) => {
-          if (
-            card.object == "card" &&
-            card.image_uris != undefined &&
-            card.image_uris.normal != undefined &&
-            card.image_uris.normal != null &&
-            card.legalities != null &&
-            card.legalities != undefined &&
-            card.legalities[currentFormat.name] != "not_legal"
-          ) {
-            let cardEl = null;
-            if (PROXY_ON) {
-              cardEl = $(
-                "<img src='" +
-                  pathToSelf(card.image_uris.normal) +
-                  "' class='search-card'>",
-              );
-            } else {
-              cardEl = $(
-                "<img src='" +
-                  card.image_uris.normal +
-                  "' class='search-card'>",
-              );
-            }
-
-            cardEl.on("click", function (event) {
-              event.preventDefault();
-
-              let loadedCard = findLoadedCard(card.name);
-
-              if (loadedCard == null || loadedCard == undefined) {
-                let cardMax = cardCountMax(card, false);
-                if (cardMax == -1) card.count = 10;
-                else card.count = cardMax;
-                let foundCard = loadedCards.find(
-                  (item) => item.name === card.name,
-                );
-                if (foundCard != null && foundCard != undefined) {
-                  foundCard.count = card.count;
-                  foundCard.commander = false;
-                } else {
-                  loadedCards.push(card);
-                }
-                addCard(card);
-                refreshDeckColors();
-                refreshSections();
-              } else if (loadedCard.count <= 0) {
-                let cardMax = cardCountMax(card, false);
-                if (cardMax == -1) card.count = 10;
-                else card.count = cardMax;
-                loadedCard.count = card.count;
-                addCard(card);
-                refreshDeckColors();
-                refreshSections();
-              }
-            });
-
-            $("#search-section").append(cardEl);
-          }
-        });
-      } else {
-        //$("#search-err").html("No cards found.");
-        $("#no-cards-container").removeClass("hidden");
-      }
-    },
-    error: function (err) {
-      $("#search-loading-container").addClass("hidden");
-      console.log(err);
-      if (err.status == 404) {
-        $("#no-cards-container").removeClass("hidden");
-      } else {
-        $("#search-err").html(
-          "There was an error with your request (" +
-            err.status +
-            "): " +
-            err.responseText,
-        );
-      }
-    },
+      },
+      error: function (err) {
+        $("#search-loading-container").addClass("hidden");
+        console.log(err);
+        if (err.status == 404) {
+          $("#no-cards-container").removeClass("hidden");
+        } else {
+          $("#search-err").html(
+            "There was an error with your request (" +
+              err.status +
+              "): " +
+              err.responseText,
+          );
+        }
+      },
+    });
   });
-});
 
-function pathToSelf(url) {
-  return ".." + url.substr(url.substr(9).indexOf("/") + 9);
-}
-
-$(document).ready(() => {
+  
+  //await loadDeck();
   refreshEvents();
   loadLocalStorage();
+  refreshSections();
 
   //setup background images
   let backgroundUrls = [
@@ -297,9 +311,7 @@ $(document).ready(() => {
     let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
     card.count = updatedCount;
     if (updatedCount <= 0) {
-      removeCard(card);
-      refreshDeckColors();
-      refreshSections();
+      removeCard(card, true);
     } else {
       obj.parent().find("span.count-span").html(updatedCount);
     }
@@ -319,9 +331,7 @@ $(document).ready(() => {
       card.count = updatedCount;
       let cardObj = $('.card-container[data-name="' + name + '"]');
       if (card.count <= 0) {
-        removeCard(card);
-        refreshDeckColors();
-        refreshSections();
+        removeCard(card, true);
       } else {
         cardObj.find("span.count-span").html(card.count);
       }
@@ -367,11 +377,9 @@ $(document).ready(() => {
     let cardName = $(event.target).parent().attr("data-name");
     let card = findLoadedCard(cardName);
     card.count = 0;
-    removeCard(card);
+    removeCard(card, true);
     console.log(loadedCards);
     refreshDeckCardCount();
-    refreshDeckColors();
-    refreshSections();
   });
 
   $("#image-menu-commander").on("click", (event) => {
@@ -387,7 +395,7 @@ $(document).ready(() => {
       let commander = loadedCards.find((item) => item.commander);
       if (commander != null && commander != undefined) {
         commander.commander = false;
-        addCard(commander);
+        addCard(commander, false);
       }
       card.commander = true;
       removeCard(card);
@@ -493,7 +501,7 @@ $(document).ready(() => {
       $(".commander-display-image:nth-child(2)").addClass("hidden");
     }
     card.commander = false;
-    addCard(card);
+    addCard(card, false);
   });
 
   $(".dropdown-btn").click((event) => {
@@ -595,8 +603,41 @@ $(document).ready(() => {
     $(event.target).addClass("selected");
     $("#" + "settings-" + event.target.id.substring(13)).addClass("selected");
   });
+
+  document.addEventListener('keydown', (event) => {
+    // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
+    if ((event.ctrlKey || event.metaKey)) {
+      if (event.key === 's') {
+        event.preventDefault(); // Prevent browser's save dialog
+        alert('Save shortcut triggered!');
+      }
+      else if (event.key === 'z') {
+        alert('undo');
+      }
+      else if (event.key === 'y') {
+        alert('redo');
+      }
+      else if (event.shiftKey && event.key === 'Z') {
+        alert('redo');
+      }
+      else if (event.shiftKey && event.key === 'E') {
+        alert('export');
+      }
+    }
+  });
+
+  $("#sideboard-tab").on("click", (event) => {
+    event.preventDefault();
+    $("#sideboard-section").toggleClass("collapsed-view"); 
+    $("#sideboard-btn").toggleClass("bx-chevron-down bx-chevron-up");
+  });
+
 });
 // ^ $(document).ready
+
+function documentLoaded() {
+  document.getElementById("preloader").classList.add("finished");
+}
 
 // returns true if their are partners on display
 function partnerDisplay() {
@@ -651,7 +692,7 @@ function refreshEvents() {
     let card = loadedCards.find(
       (item) => item.name == obj.parent().attr("data-name"),
     );
-    $(".card-viewer-image").attr("src", card.image_uris.png);
+    $(".card-viewer-image").attr("src", card.image_uris.normal);
     $(".card-viewer-image").attr("alt", card.name);
     $(".card-viewer-count-input").val(card.count);
     $("#modal-section").removeClass("hidden");
@@ -965,6 +1006,7 @@ function loadLocalStorage() {
     if (info.description != null && info.description != undefined)
       $("#description-input").val(info.description);
   }
+  /*
   if (cards == null || cards == undefined) {
     loadedCards = [];
     $.ajax({
@@ -988,7 +1030,7 @@ function loadLocalStorage() {
             }
           }
           else {
-            addCard(card);
+            addCard(card, false);
           }
         });
         refreshDeckFormat();
@@ -1034,7 +1076,7 @@ function loadLocalStorage() {
             }
           } else {
             console.log(loadedCards[i].name);
-            addCard(loadedCards[i]);
+            addCard(loadedCards[i], false);
           }
           refreshDeckColors();
           refreshSections();
@@ -1059,7 +1101,7 @@ function loadLocalStorage() {
               $(partner).attr("data-name", loadedCards[i].name);
             }
           } else {
-            addCard(loadedCards[i]);
+            addCard(loadedCards[i], false);
           }
           refreshDeckColors();
           refreshSections();
@@ -1067,7 +1109,10 @@ function loadLocalStorage() {
       });
     }
   }
+    */
 }
+
+// loadDeck
 
 function writeAllLocalStorage() {
   writeCardsLocalStorage();
@@ -1149,6 +1194,67 @@ function getCardStorageJSON() {
   const maxInteger = Number.MAX_SAFE_INTEGER;
   json.list = json.list.sort((a, b) => (a.index == null || a.index == undefined ? maxInteger : a.index) - (b.index == null || b.index == undefined ? maxInteger : b.index));
   return json;
+}
+
+async function saveDeck() {
+  if (loadedCards.length == 0) {
+    alert("You cannot save an empty deck.");
+    return;
+  }
+  if (currentFormat == null || currentFormat == undefined) {
+    alert("You must select a format before saving.");
+    return;
+  }
+
+  let deck = {};
+  deck.format = currentFormat.name;
+  let nameinput = $("#deck-name-input").val().trim();
+  if (nameinput == null || nameinput == undefined || nameinput.length == 0) nameinput = "Untitled Deck";
+  deck.name = nameinput;
+  deck.description =  $("#description-input").val().trim();
+  deck.cards = [];
+  deck.sideboard = [];
+
+  loadedCards.forEach((card) => {
+    if (card.count != null && card.count > 0) {
+      let saveCard = {};
+      saveCard.scryfallId = card.id;
+      saveCard.count = card.count;
+      saveCard.commander = card.commander != null && card.commander != undefined ? card.commander : false;
+      if (card.sideboard != null) {
+        saveCard.count -= card.sideboard;
+        if (card.sideboard > 0) {
+          let sideCard = { ...saveCard };
+          sideCard.count = card.sideboard;
+          deck.sideboard.push(sideCard);
+        }
+      }
+      if (saveCard.count > 0) deck.cards.push(saveCard);
+    }
+  });
+
+  if (savePromise != null) {
+    await savePromise;
+  }
+
+  savePromise = fetch("/savedeck", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(deck)
+  }).then((response) => {
+    if (!response.ok) {
+      response.text().then((text) => {
+        alert("There was an error saving your deck: " + text);
+      });
+      return;
+    }
+    $("#save-msg").text("Deck Saved");
+    sav
+  }).catch(error => {
+    alert("There was an error saving your deck: " + error.message);
+  })
 }
 
 /**
@@ -1237,7 +1343,7 @@ function refreshDeckFormat() {
   if (currentFormat.name != "commander" && currentFormat.name != "brawl") {
     if (commanders.length > 0 && !$("#commander-info-container").hasClass("hidden")) {
       $("#commander-info-container").addClass("hidden");
-      for (let i = 0; i < commanders.length; i++) addCard(commanders[i]);
+      for (let i = 0; i < commanders.length; i++) addCard(commanders[i], false);
       refreshSections();
     }
   } 
@@ -1410,7 +1516,7 @@ function commanderContext(event) {
  * Refreshes events and deck format, but not sections. Call <code>refreshSections()</code> after.
  * @param {*} card card object in loadedCards
  */
-function addCard(card) {
+function addCard(card, refresh = true) {
   let cardAdded =
     $(`<div class="card-container" data-count="${card.count}" data-name="${card.name}" data-scryfall="${card.uri}">
   <div class="card-count-column">
@@ -1418,7 +1524,7 @@ function addCard(card) {
     <div class="card-count-add card-count-btn">&plus;</div>
     <div class="card-count-remove card-count-btn">&minus;</div>
   </div>
-  <img src="${card.image_uris.normal}" class="card-image">
+  <img src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
   </div>`);
   //cardAdded.data("count", 4);
   //$(cardContainer).append(cardAdded);
@@ -1457,9 +1563,7 @@ function addCard(card) {
     let cardMax = cardCountMax(card, false);
     if (updatedCount <= 0) {
       card.count = 0;
-      removeCard(card);
-      refreshDeckColors();
-      refreshSections();
+      removeCard(card, true);
     } else if (updatedCount <= cardMax || cardMax == -1) {
       card.count = updatedCount;
       obj.parent().find("span.count-span").html(updatedCount);
@@ -1470,19 +1574,44 @@ function addCard(card) {
   refreshDeckFormat();
   refreshEvents();
   writeCardsLocalStorage();
+
+  if (refresh) {
+    refreshDeckColors();
+    refreshSections();
+  }
+}
+
+// card is just a regular card, but with a sideboard: number attribute determining the number of that card in sideboard
+function addCardToSideboard(card) {
+  let cardAdded =
+    $(`<div class="card-container sideboard-card" data-count="${card.sideboard}" data-name="${card.name}" data-scryfall="${card.uri}">
+  <div class="card-count-column">
+    <div class="card-count">&times;<span class="count-span">${card.sideboard}</span></div>
+  </div>
+  <img src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
+  </div>`);
+  $("#sideboard-display-container").append(cardAdded);
+
+  refreshDeckFormat();
+  refreshEvents();
+  writeCardsLocalStorage();
 }
 
 /**
  * Removes a card from the deck display.
  * Does not refresh anything. Call <code>refreshDeckColors()</code> and <code>refreshSections()</code> after.
  */
-function removeCard(card) {
+function removeCard(card, refresh = false) {
   let cardObj = $(`.card-container[data-name="${card.name}"]`);
   if (cardObj.parent().children().length == 2) {
     cardObj.parent().addClass("hidden");
   }
   cardObj.remove();
   writeCardsLocalStorage();
+  if (refresh) {
+    refreshDeckColors();
+    refreshSections();
+  }
 }
 
 /**

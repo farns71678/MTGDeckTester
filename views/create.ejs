@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MTG Deck Tester - Create a new Standard deck</title>
 
-    <link href="./styles.css" rel="stylesheet" />
+    <link href="/create/styles.css" rel="stylesheet" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -15,16 +15,28 @@
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="./app.js" defer></script>
+    <script src="/create/app.js"></script>
   </head>
   <body>
+
+    <!--preloader-->
+    <div id="preloader">
+      <div id="preloader-label">Loading</div>
+      <span class="preloader-dot" style="--i: 1;">.</span>
+      <span class="preloader-dot" style="--i: 2;">.</span>
+      <span class="preloader-dot" style="--i: 3;">.</span>
+      <div id="preloader-error" class="hidden">There was and error loading your decks.<a href="/decks">Back to decks</a></div>
+    </div>
+
     <nav>
       <div id="dropdown-container">
         <div class="dropdown">
           <div class="dropdown-btn">Edit</div>
           <div class="dropdown-content">
-            <div class="dropdown-item">Undo</div>
-            <div class="dropdown-item">Redo</div>
+            <div class="dropdown-item shortcut-container">Undo <span class="dropdown-shortcut">Ctrl + Z</span></div>
+            <div class="dropdown-item shortcut-container">Redo <span class="dropdown-shortcut">Ctrl + Y</span></div>
+            <div class="dropdown-item shortcut-container">Save <span class="dropdown-shortcut">Ctrl + S</span></div>
+            <div class="dropdown-item shortcut-container">Export Deck <span class="dropdown-shortcut">Ctrl + Shift + E</span></div>
           </div>
         </div>
         <div class="dropdown">
@@ -45,6 +57,7 @@
             <div class="dropdown-item" id="dropdown-background-btn">Change Background</div>
           </div>
         </div>
+        <div id="save-msg">Saved</div>
       </div>
       <div id="nav-title" class="glow">MTG Deck Tester</div>
       <div id="link-container">
@@ -124,24 +137,7 @@
                 class="card-type-container hidden clearfix"
               >
                 <h1 class="card-type-title">CREATURES</h1>
-                <!--<div
-                  class="card-container"
-                  data-count="4"
-                  data-name="Aurelia, the Warleader"
-                  data-scryfall="https://api.scryfall.com/cards/bc6ffc1c-575b-4116-83c9-d13b29886c35"
-                >
-                  <div class="card-count-column">
-                    <div class="card-count">
-                      &times;<span class="count-span">4</span>
-                    </div>
-                    <div class="card-count-add card-count-btn">&plus;</div>
-                    <div class="card-count-remove card-count-btn">&minus;</div>
-                  </div>
-                  <img
-                    src="https://cards.scryfall.io/normal/front/b/c/bc6ffc1c-575b-4116-83c9-d13b29886c35.jpg?1730491066"
-                    class="card-image"
-                  />
-                </div>-->
+                
               </div>
 
               <div
@@ -195,7 +191,17 @@
             <div id="display-column-4" class="display-column hidden"></div>
             <div id="display-column-5" class="display-column hidden"></div>
           </div>
+          
         </div>
+        <div id="sideboard-section">
+            <div id="sideboard-tab"><div>SIDEBOARD</div> <i id="sideboard-btn" class="bx bx-chevron-up"></i></div>
+          <div id="sideboard-container" class="collapsed-view">
+            <div id="sideboard-display-container" class="card-type-container clearfix">
+              <h1 class="card-type-title">SIDEBOARD</h1>
+            </div>
+          </div>
+        </div>
+        <script src="/create/loader.js"></script>
 
             
 
@@ -248,7 +254,7 @@
     </div>
 
     <!--modal section-->
-    <div id="modal-section" class="">
+    <div id="modal-section" class="hidden">
       <div id="card-viewer-container" class="hidden">
         <div class="card-viewer-count-row">
           <div class="card-viewer-input-label">CARD COUNT:</div>
@@ -267,7 +273,7 @@
           class="card-viewer-image"
         />
       </div>
-      <div id="settings-container" class="">
+      <div id="settings-container" class="hidden">
         <div id="settings-header">
             <div id="settings-header-offset" style="visibility: hidden;">&times;</div>
             <h1 id="settings-title">Settings</h1>

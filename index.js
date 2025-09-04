@@ -6,6 +6,7 @@ const url = require("url");
 const routes = require("./routes/exports.js");
 const cookieParser = require("cookie-parser");
 const { requireAuth, checkUser } = require("./middleware/authMiddleware");
+const { Deck, presaveDeck } = require('./models/Deck');
 const app = express();
 const port = 3000;
 
@@ -24,7 +25,7 @@ if (USE_DATABASE) app.get("*", checkUser);
 
 app.get("/", (req, res) => {
   //res.send('Hello, world!');
-  res.sendFile(__dirname + "/home/index.html");
+  res.sendFile("./home/index.html", { root: __dirname });
 });
 
 /*app.get("/images/*", (req, res) => {
@@ -37,6 +38,15 @@ const scryfallImageProxy = proxy("https://cards.scryfall.io/", {
 
 const scryfallCardProxy = proxy("https://api.scryfall.com/", {
   proxyReqPathResolver: (req) => url.parse(req.baseUrl).path,
+  proxyErrorHandler: function(err, res, next) {
+    console.log("Error in proxy: ", res);
+    next(err);
+  },
+  proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
+    // you can update headers
+    console.log("Proxying request to: ", srcReq.url);
+    return proxyReqOpts;
+  }
 });
 
 app.use("/png/*", scryfallImageProxy);
@@ -77,10 +87,14 @@ app.get("/create", checkUser, (req, res) => {
 app.get("/:username/:deckId", checkUser, (req, res) => {
   const { username, deckId } = req.params;
   if (res.locals.user && res.locals.user.username != username)
-    res.render("create", { user: res.locals.user, edit: false, deckId: deckId });
+    res.render("viewer", { user: res.locals.user, deckId: deckId });
   else if (res.locals.user && res.locals.user.username == username)
-    res.render("create", { user: res.locals.user, edit: true, deckId: deckId });
-  else res.render("create", { user: null, deckId: deckId });
+    res.render("create", { user: res.locals.user, deckId: deckId });
+  else res.render("viewer", { user: null, deckId: deckId });
+});
+
+app.get("/view", (req, res) => {
+  res.render("viewer");
 });
 
 //app.use("/decks", express.static(__dirname + "/decks"));
@@ -105,8 +119,32 @@ if (USE_DATABASE) {
     .catch((err) => console.log(err));
 }
 
+//updateDecks();
+
 if (!USE_DATABASE) {
   app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
+  });
+}
+
+async function updateDecks() {
+  const decks = await Deck.find();
+  console.log(decks);
+  decks.forEach((deck) => {
+    deck.cards.forEach((card, index) => {
+      if (card.index > 12) {
+        card.sideboard = card.count;
+        card.count = 0;
+      }
+    });
+
+    if (deck.sideboard) {
+      deck.sideboard.forEach((card) => {
+        deck.cards.push({scryfallId: card.scryfallId, count: 0, sideboard: card.count});
+      })
+
+      deck.sideboard = undefined;
+    }
+    deck.save();
   });
 }
