@@ -1,4 +1,3 @@
-
 const formats = [
     { name: "standard", singleton: false, size: 60 },
     { name: "modern", singleton: false, size: 60 },
@@ -116,6 +115,29 @@ $(document).ready(() => {
             error.textContent = "An unexpected error occured. Please close and try again.";
         }
     });
+
+    $("#copy-share-link").on("click", async function () {
+        const link = $(this).data("share-link");
+        const dialog = document.getElementById("share-dialog");
+        const error = dialog.querySelector("p.error");
+        error.innerHTML = "";
+
+        try {
+            if (link) {
+                await navigator.clipboard.writeText(link);
+                this.classList.remove("bi-clipboard");
+                this.classList.add("bi-clipboard-check");
+            }
+            else {
+                throw new Error("An unexpected error occured. Please close and try again later.");
+            }
+        }
+        catch (err) {
+            error.innerHTML = "An unexpected error occured. Please close and try again later.";
+                this.classList.remove("bi-clipboard");
+                this.classList.add("bi-clipboard-x");
+        }
+    });
 });
 
 function displayError(msg) {
@@ -138,23 +160,27 @@ function toggleIconToolRow(id) {
     row.classList.toggle("deck-icon-tool-hidden");
 }
 
-function showModal(id) {
-    const dialog = document.getElementById(id);
-
-    if (dialog) {
-        $(".modal-dialog").addClass("hidden");
-        dialog.removeClass("hidden");
-        $("modal-container").removeClass("hidden");
-    }
-}
-
 function deleteDeck(deck) {
     deck = JSON.parse(decodeURIComponent(deck));
-    //showDeleteDialog(deck);
     const dialog = document.getElementById("delete-deck-dialog");
     dialog.querySelector("p.error").innerHTML = "";
-    dialog.querySelector("#delete-deck-name").innerHTML = deck.name;
+    dialog.querySelectorAll(".modal-deck-name").forEach((el) => { el.innerHTML = deck.name || "Untitled deck"; });
     dialog.querySelector("#delete-deck-btn").setAttribute("data-deck-id", deck._id);
+}
+
+// deck is actually { deck: deck, username: username }
+function shareDeck(deck) {
+    deck = JSON.parse(decodeURIComponent(deck));
+    const dialog = document.getElementById("share-dialog");
+    dialog.querySelector("p.error").innerHTML = "";
+    dialog.querySelectorAll(".modal-deck-name").forEach((el) => { el.innerHTML = deck.deck.name || "Untitled deck"; });
+    const copy = dialog.querySelector("#copy-share-link")
+    const link = "https://cautious-happiness-69g5ww6x9prgf546-3000.app.github.dev/" + deck.username + "/" + deck.deck._id;
+    copy.setAttribute("data-share-link", link);
+    copy.classList.remove("bi-clipboard-x");
+    copy.classList.remove("bi-clipboard-check");
+    copy.classList.add("bi-clipboard");
+    dialog.querySelector("#share-link").innerHTML = link;
 }
 
 const getDeckHTML = (deck, username) => {
@@ -171,7 +197,7 @@ const getDeckHTML = (deck, username) => {
     return `<div id="deck-${ deck._id}" class="deck-container" data-deck-id="${ deck._id }" data-deck="${ JSON.stringify(deck) }" ondblclick=editDeck('/${ username }/${ deck._id }') style="background-image: url('${ (deck.backgroundUrl == null || deck.backgroundUrl == "" ? "https://wallpaperbat.com/img/339185-res-1920x-magic-the-gathering-trading-card-games-hd.jpg" : deck.backgroundUrl) }');">
         <div class="deck-icon-tool-row deck-init-hidden deck-icon-tool-hidden">
             <i class="bx bx-cog"></i>
-            <i class="bx bx-share-alt"></i>
+            <i class="bx bx-share-alt" onclick="shareDeck('${ encodeURIComponent(JSON.stringify({ deck, username })) }')" data-bs-toggle="modal" data-bs-target="#share-dialog"></i>
             <i class="bx bx-git-repo-forked"></i>
             <i class="bx bxs-trash" onclick="deleteDeck('${ encodeURIComponent(JSON.stringify(deck)) }')" data-bs-toggle="modal" data-bs-target="#delete-deck-dialog"></i>
         </div>        

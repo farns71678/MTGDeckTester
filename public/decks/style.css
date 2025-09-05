@@ -458,9 +458,47 @@ div.deck-init-hidden {
   display: none;
 }
 
-#delete-deck-name {
+.modal-deck-name {
   color: #bcffbc;
 }
+
+#share-link {
+  white-space: nowrap;
+  /*text-overflow: ellipsis;*/
+  border: 0.5px solid #999;
+  margin: 0 5px;
+  background-color: #444;
+  padding: 0 3px;
+  border-radius: 4px;
+  max-width: 100%;
+  overflow: auto;
+  font-size: 11pt;
+}
+
+#share-row {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#share-row div {
+  white-space: nowrap;
+}
+
+#share-link::-webkit-scrollbar {
+  height: 0;
+}
+
+#copy-share-link {
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-size: 14pt;
+}
+
+#copy-share-link:hover {
+  background-color: rgba(200, 200, 200, 0.15);
+}
+
 
 .hidden {
   display: none !important;
