@@ -100,7 +100,7 @@ $(document).ready(() => {
                     "headers": {
                         "Content-Type": "application/json"
                     },
-                    "body": { _id: deckId }
+                    "body": JSON.stringify({ _id: deckId })
                 });
 
                 if (!response.ok) throw new Error("Error deleting deck. ");
@@ -149,10 +149,10 @@ function showModal(id) {
 }
 
 function deleteDeck(deck) {
+    deck = JSON.parse(decodeURIComponent(deck));
     //showDeleteDialog(deck);
-    alert('called');
     const dialog = document.getElementById("delete-deck-dialog");
-    dialog.querySelector("p.error").innerHTML = "Error";
+    dialog.querySelector("p.error").innerHTML = "";
     dialog.querySelector("#delete-deck-name").innerHTML = deck.name;
     dialog.querySelector("#delete-deck-btn").setAttribute("data-deck-id", deck._id);
 }
@@ -170,9 +170,10 @@ const getDeckHTML = (deck, username) => {
     
     return `<div id="deck-${ deck._id}" class="deck-container" data-deck-id="${ deck._id }" data-deck="${ JSON.stringify(deck) }" ondblclick=editDeck('/${ username }/${ deck._id }') style="background-image: url('${ (deck.backgroundUrl == null || deck.backgroundUrl == "" ? "https://wallpaperbat.com/img/339185-res-1920x-magic-the-gathering-trading-card-games-hd.jpg" : deck.backgroundUrl) }');">
         <div class="deck-icon-tool-row deck-init-hidden deck-icon-tool-hidden">
+            <i class="bx bx-cog"></i>
             <i class="bx bx-share-alt"></i>
             <i class="bx bx-git-repo-forked"></i>
-            <i class="bx bxs-trash" onclick="deleteDeck(${ deck })" data-bs-toggle="modal" data-bs-target="#delete-deck-dialog"></i>
+            <i class="bx bxs-trash" onclick="deleteDeck('${ encodeURIComponent(JSON.stringify(deck)) }')" data-bs-toggle="modal" data-bs-target="#delete-deck-dialog"></i>
         </div>        
         <div class="deck-fade"></div>
             <div class="deck-details">
@@ -191,25 +192,4 @@ const getDeckHTML = (deck, username) => {
                 </div>
             </div>
         </div>`;
-}
-
-const deleteDeckModalHTML = (deck) => {
-    return `<div class="modal" tabindex="-1">
-      <div id="delete-deck-dialog" class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Delete Deck</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Warning!</strong> This action is irreversible. Are you sure you want to delete deck "<span id="delete-deck-name">${ deck.name }</span>"?</p>
-            <p class="error"></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" id="delete-deck-cancel-btn" class="cancel-btn btn-outline-secondary modal-close-btn" data-bs-dismiss="modal">Close</button>
-            <button type="button" id="delete-deck-btn" class="btn-outline-warning" data-deck-id="${ deck._id }">Delete Deck</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
 }

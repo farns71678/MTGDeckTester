@@ -125,6 +125,16 @@ async function presaveDeck(deck) {
             }
 
             // handle sideboard cards
+            if (typeof card.sideboard === "boolean" && card.sideboard) {
+                card.sideboard = card.count;
+                card.count = 0;
+            }
+            else if (typeof card.sideboard === "number") {
+                if (card.sideboard < 0) card.sideboard = 0;
+            }
+            else {
+                card.sideboard = 0;
+            }
             /*if (card.sideboard) {
                 // remove from main deck
                 deck.cards.splice(i, 1);

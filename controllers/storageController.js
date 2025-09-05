@@ -23,7 +23,7 @@ module.exports.createDeck = async (req, res) => {
         let user = res.locals.user;
         deck.owner = user._id;
         await presaveDeck(deck);
-        let doc = await Deck.create(deck).lean();
+        let doc = (await Deck.create(deck)).toObject();
         doc.count = getDeckCardTotal(doc);
         await user.updateOne({ $push: { decks: doc._id } });
         res.send(JSON.stringify({ deck: doc, username: user.username}));
@@ -57,9 +57,13 @@ module.exports.saveDeck = async (req, res) => {
 
 module.exports.deleteDeck = async (req, res) => {
     const { _id } = req.body;
+    const user = res.locals.user;
 
     try {
-        if (res.locals.user.decks.includes(_id)) await Deck.deleteOne({ _id });
+        if (user.decks.includes(_id)) {
+            await Deck.deleteOne({ _id });
+            await user.updateOne({ $pull: { decks: _id } });
+        }
         else res.status(401).send("You do not own this deck. ");
     }
     catch (err) {

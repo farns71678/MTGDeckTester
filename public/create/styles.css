@@ -714,6 +714,7 @@ textarea {
   writing-mode: vertical-rl;
   text-orientation: sideways;
   transform: rotate(180deg);
+  will-change: transform;
   font-size: 12pt;
   letter-spacing: 1px;
   color: #eed;
