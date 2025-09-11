@@ -7,6 +7,7 @@ const routes = require("./routes/exports.js");
 const cookieParser = require("cookie-parser");
 const { requireAuth, checkUser } = require("./middleware/authMiddleware");
 const { Deck, presaveDeck } = require('./models/Deck');
+const { parse } = require("path");
 const app = express();
 const port = 3000;
 
@@ -55,6 +56,7 @@ app.use("/art_crop/*", scryfallImageProxy);
 
 app.use("/cards/*", scryfallCardProxy);
 
+/*
 app.use(
   "/search",
   createProxyMiddleware({
@@ -67,9 +69,32 @@ app.use(
       proxyReq: (proxyReq, req, res) => {
         console.log("https://api.scryfall.com" + proxyReq.path);
       },
+      proxyRes: (proxyRes, req, res) => {
+        console.log(res.statusCode + " " + req.method + " " + req.url + " " + res.statusMessage);
+        console.log(res.body);
+      },
+      error: (err, req, res) => {
+        console.log("Error in proxy: ", err);
+      }
     },
   })
 );
+*/
+
+app.get("/search", async (req, res) => {
+  try {
+    const reqUrl = new URL(req.url, `http://${req.headers.host}`);
+    const apiUrl = "https://api.scryfall.com/cards/search" + (reqUrl.search || "");
+    console.log(apiUrl);
+    let response = await fetch(apiUrl);
+    let data = await response.json();
+    res.writeHead(response.status, "OK", response.headers);
+    res.json(data);
+  }
+  catch (err) {
+    res.status(500).json({error: "Error fetching from Scryfall API"});
+  }
+});
 
 // routes
 app.use(routes.authRoutes);

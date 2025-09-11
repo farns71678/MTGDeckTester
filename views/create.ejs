@@ -12,6 +12,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -43,7 +44,7 @@
           <div class="dropdown-btn">View</div>
           <div class="dropdown-content">
             <div class="dropdown-item dropdown-view" data-type='class' data-element='card-type-title'>Headers<i class="bx bxs-show"></i></div>
-            <div class="dropdown-item dropdown-view" data-type='toggle' data-element='.display-column' data-value='collapsed-view'>Add/Remove<i class="bx bxs-show"></i></div>
+            <div class="dropdown-item dropdown-view" data-type='toggle' data-element='#display-flex' data-value='collapsed-view'>Add/Remove<i class="bx bxs-show"></i></div>
             <div id="columns-dropdown" class="dropdown-item dropdown-side-view">
               Columns
               <i class="bx bx-chevron-right"></i>
@@ -122,10 +123,10 @@
       <!--display section-->
       <div id="display-section">
         <!-- this is all test html-->
-        <div id="card-display-container">
+        <div id="card-display-container" class="drag-destination">
           <div id="display-flex">
             <div id="display-column-0" class="display-column">
-              <div id="commander-info-container" class="hidden clearfix">
+              <div id="commander-info-container" class="hidden clearfix drag-destination">
                 <div id="commander-flex">
                   <img src="https://cards.scryfall.io/normal/front/7/5/755cf134-e91e-4aa4-be44-b7a53a7f9e20.jpg?1743207218" alt="Commander" class="commander-display-image" data-name="Sidar Kondo of Jamuraa" data-order="0">
                   <img src="https://cards.scryfall.io/normal/front/a/6/a6fd7a8c-e0cd-4fb5-b492-8f3ef7579682.jpg?1743206070" alt="Partner" class="commander-display-image hidden" data-name="Ikra Shidiqi, the Usurper" data-order="1">
@@ -193,7 +194,7 @@
           </div>
           
         </div>
-        <div id="sideboard-section">
+        <div id="sideboard-section" class="drag-destination">
             <div id="sideboard-tab"><div>SIDEBOARD</div> <i id="sideboard-btn" class="bx bx-chevron-up"></i></div>
           <div id="sideboard-container" class="collapsed-view">
             <div id="sideboard-display-container" class="card-type-container clearfix">
@@ -205,7 +206,7 @@
 
             
 
-        <img id="drag-image" class="card-image hidden"></img>
+        <img inert id="drag-image" class="card-image hidden" data-src="" data-dest="" data-name="" />
 
         <!--right click image menu-->
         <div id="display-modal-container">
@@ -227,7 +228,7 @@
       </div>
 
       <!--search section-->
-      <div id="search-section">
+      <div id="search-section" class="drag-destination">
         <h2>CARD SEARCH</h2>
         <form id="search-form">
           <div id="scryfall-input" class="info-input" contenteditable="true" spellcheck="false"></div>

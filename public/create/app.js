@@ -53,7 +53,7 @@ let startY = 0;
 let newX = 0;
 let newY = 0;
 let grabbedImage = null;
-let shifftedImage = false;
+let shiftedImage = false;
 let savePromise = null;
 
 colorData.set("W", { name: "white", symbol: "{W}", order: 0 });
@@ -177,15 +177,15 @@ $(document).ready(async () => {
               let cardEl = null;
               if (PROXY_ON) {
                 cardEl = $(
-                  "<img src='" +
+                  "<img inert src='" +
                     pathToSelf(card.image_uris.normal) +
-                    "' class='search-card'>",
+                    "' class='search-card' data-name='" + card.name.replaceAll("'", "\\'") + "'>",
                 );
               } else {
                 cardEl = $(
-                  "<img src='" +
+                  "<img inert src='" +
                     card.image_uris.normal +
-                    "' class='search-card'>",
+                    "' class='search-card' data-name='" + card.name.replaceAll("'", "\\'") + "'>",
                 );
               }
 
@@ -305,26 +305,28 @@ $(document).ready(async () => {
   $(".card-count-btn").on("click", (event) => {
     event.preventDefault();
     let obj = $(event.target);
+    const cardContainer = obj.parent(".card-container");
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().parent().attr("data-name"),
+      (item) => item.name == cardContainer.attr("data-name"),
     );
     let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
     card.count = updatedCount;
     if (updatedCount <= 0) {
       removeCard(card, true);
     } else {
-      obj.parent().find("span.count-span").html(updatedCount);
+      cardContainer.find("span.count-span").html(updatedCount);
     }
     refreshDeckCardCount();
   });
 
   $(".card-viewer-close-btn").on("click", (event) => {
     event.preventDefault();
-    // we're here
-    let name = $(event.target).parent().parent().find("img").attr("alt");
+    
+    const dialog = $("#card-viewer-container");
+    const name = dialog.find("img").attr("alt");
     let card = loadedCards.find((item) => item.name == name);
     let updatedCount = parseInt(
-      $(event.target).parent().find(".card-viewer-count-input").val(),
+      dialog.find(".card-viewer-count-input").val(),
     );
     let max = cardCountMax(card);
     if (updatedCount >= 0 && (updatedCount <= max || max == -1)) {
@@ -356,7 +358,7 @@ $(document).ready(async () => {
 
   $("#image-menu-plus").on("click", (event) => {
     event.preventDefault();
-    let cardName = $(event.target).parent().attr("data-name");
+    let cardName = $("#image-menu").attr("data-name");
     let plusBtn = $(
       `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-add`,
     );
@@ -365,7 +367,7 @@ $(document).ready(async () => {
 
   $("#image-menu-minus").on("click", (event) => {
     event.preventDefault();
-    let cardName = $(event.target).parent().attr("data-name");
+    let cardName = $("#image-menu").attr("data-name");
     let minusBtn = $(
       `.card-container[data-name="${cardName}"]>.card-count-column>.card-count-remove`,
     );
@@ -374,7 +376,7 @@ $(document).ready(async () => {
 
   $("#image-menu-remove").on("click", (event) => {
     event.preventDefault();
-    let cardName = $(event.target).parent().attr("data-name");
+    let cardName = $("#image-menu").attr("data-name");
     let card = findLoadedCard(cardName);
     card.count = 0;
     removeCard(card, true);
@@ -389,7 +391,7 @@ $(document).ready(async () => {
       event.target.classList.contains("disabled")
     )
       return;
-    let cardName = $(event.target).parent().attr("data-name");
+    let cardName = $(event.target).parent(".card-container").attr("data-name");
     let card = findLoadedCard(cardName);
     if (card != null && card != undefined) {
       let commander = loadedCards.find((item) => item.commander);
@@ -414,7 +416,7 @@ $(document).ready(async () => {
       event.target.classList.contains("disabled")
     )  return;
 
-    let cardName = $(event.target).parent().attr("data-name");
+    let cardName = $("#image-menu").attr("data-name");
     let card = findLoadedCard(cardName);
     if (card != null && card != undefined) {
       card.commander = true;
@@ -426,59 +428,105 @@ $(document).ready(async () => {
     }
   });
 
-  $("#display-section").on("mousemove", (event) => {
+  $("#main-section").on("mousemove", (event) => {
     let dragImage = document.getElementById("drag-image");
 
-    if (mouseDown && grabbedImage != null && grabbedImage != undefined) {
-      $(grabbedImage).css(
-        "transform",
-        "translateY(" + (event.clientY - dragStartY) + "px)",
-      );
-      if (Math.abs(event.clientY - dragStartY) > 2) {
-        $(grabbedImage).removeClass("card-image-hover");
-        shifftedImage = true;
+    if (mouseDown && grabbedImage) {
+      const cardContainer = $(grabbedImage.closest(".card-container"));
+      const translateY = (event.clientY - dragStartY);
+      const translateX = (event.clientX - dragStartX);
+
+      if ($(grabbedImage).hasClass("dragging-thumb")) {
+        const top = grabbedImage.getBoundingClientRect().top;
+        const rect = cardContainer[0].getBoundingClientRect();
+        const cardGroup = cardContainer.parent(".card-type-container");
+        if (rect.bottom + translateY < cardGroup[0].getBoundingClientRect().bottom && rect.top + translateY > cardGroup.find(".card-container:first-of-type")[0].getBoundingClientRect().top) {
+          $(grabbedImage).css(
+            "transform",
+            "translateY(" + translateY + "px)",
+          );
+        }
+        if (Math.abs(translateY) > 2) {
+          $(grabbedImage).removeClass("card-image-hover");
+          shiftedImage = true;
+        }
+
+        let under = cardContainer.next().find(".card-image-wrap");
+        let over = cardContainer.prev().find(".card-image-wrap");
+        let underDiff =
+          under.length == 0
+            ? null
+            : Math.abs(top - under.get(0).getBoundingClientRect().top);
+        let overDiff =
+          over.length == 0
+            ? null
+            : Math.abs(top - over.get(0).getBoundingClientRect().top);
+
+
+        const containerTop = rect.top;
+        const dist = (cardGroup.find(".card-container").length <= 1 ? null : 
+          Math.abs(cardContainer.next().length > 0 ? containerTop - cardContainer.next()[0].getBoundingClientRect().top : cardContainer.prev()[0].getBoundingClientRect().top - containerTop));
+
+        if (underDiff != null && underDiff < dist * 0.35/*((collapsed && underDiff < 10) || (!collapsed && underDiff < 41))*/) {
+          under.parent(".card-container").after(cardContainer);
+          $(grabbedImage).css("transform", "translateY(-" + underDiff + "px)");
+          dragStartY = event.clientY + underDiff;
+          dragStartX = event.clientX;
+          writeCardsLocalStorage();
+        } else if (overDiff != null && overDiff < dist * 0.35 /*((collapsed && overDiff < 10) || (!collapsed && overDiff < 41))*/) {
+          over.parent(".card-container").before(cardContainer);
+          $(grabbedImage).css(
+            "transform",
+            "translateY(" + 1.5 * overDiff + "px)",
+          );
+          dragStartY = event.clientY - overDiff;
+          dragStartX = event.clientX;
+          writeCardsLocalStorage();
+        }
       }
-
-      let top = grabbedImage.getBoundingClientRect().top;
-      let under = $(grabbedImage).parent().next().children().eq(1);
-      let over = $(grabbedImage).parent().prev().children().eq(1);
-      let underDiff =
-        under.length == 0
-          ? null
-          : Math.abs(top - under.get(0).getBoundingClientRect().top);
-      let overDiff =
-        over.length == 0
-          ? null
-          : Math.abs(top - over.get(0).getBoundingClientRect().top);
-
-      let collapsed = $(grabbedImage).parent().parent().parent().hasClass("collapsed-view") || 
-                      $(grabbedImage).parent().hasClass("singleton-view");
-      if (underDiff != null && ((collapsed && underDiff < 17) || (!collapsed && underDiff < 41))) {
-        under.parent().after($(grabbedImage).parent());
-        $(grabbedImage).css("transform", "translateY(-" + underDiff + "px)");
-        dragStartY = event.clientY + underDiff;
-        dragStartX = event.clientX;
-        writeCardsLocalStorage();
-      } else if (overDiff != null && ((collapsed && overDiff < 17) || (!collapsed && overDiff < 41))) {
-        over.parent().before($(grabbedImage).parent());
-        $(grabbedImage).css(
-          "transform",
-          "translateY(" + 1.5 * overDiff + "px)",
-        );
-        dragStartY = event.clientY - overDiff;
-        dragStartX = event.clientX;
-        writeCardsLocalStorage();
+      else {
+        // not restricted drag
+        
+        if (!shiftedImage && Math.hypot(translateX, translateY) > 2) {
+          $(grabbedImage).removeClass("card-image-hover");
+          cardContainer.addClass("hidden dragging");
+          dragImage.classList.remove("hidden");
+          shiftedImage = true;
+        }
+        if (shiftedImage) {
+          const dragRect = dragImage.getBoundingClientRect();
+          dragImage.style.left = event.clientX - dragRect.width / 2 + "px";
+          dragImage.style.top = event.clientY - dragRect.height / 2 + "px";
+        }
       }
     }
   });
 
-  $("#display-section").on("mouseup", (event) => {
+  $("#main-section").on("mouseup", (event) => {
     console.log("drag stop");
     mouseDown = false;
     dragStartX = -100;
     dragStartY = -100;
+    const cardContainer = $(grabbedImage).parent(".card-container");
+    const dragImage = document.getElementById("drag-image");
     $(grabbedImage).css("transform", "translateY(0px)");
+    $(grabbedImage).removeClass('dragging-thumb');
+    cardContainer.removeClass("hidden dragging");
+    dragImage.style.left = "-1000px";
+    dragImage.style.top = "-1000px";
+    shiftedImage = false;
     grabbedImage = null;
+    const dest = dragImage.getAttribute("data-dest");
+    // here
+    if (dest != null && dest.length > 0) {
+      const src = dragImage.getAttribute("data-src");
+      const name = dragImage.getAttribute("data-name");
+      if (dest == "deck-display-container") {
+        if (src == "search-section") {
+          $(".search-card[data-name='" + name.replaceAll("'", "\\'") + "']").click();
+        }
+      }
+    }
     //$("#drag-image").addClass("hidden");
   });
 
@@ -486,7 +534,8 @@ $(document).ready(async () => {
 
   $("#commander-menu-remove").on("click", (event) => {
     event.preventDefault();
-    let cardName = $(event.target).parent().attr("data-name");
+    const cardContainer = $(event.target).find(".card-container")
+    let cardName = cardContainer.attr("data-name");
     let card = findLoadedCard(cardName);
     if (!partnerDisplay()) {
       $("#commander-info-container").addClass("hidden");
@@ -632,6 +681,24 @@ $(document).ready(async () => {
     $("#sideboard-btn").toggleClass("bx-chevron-down bx-chevron-up");
   });
 
+  $("#drag-image").on("dragstart", (event) => {
+    event.preventDefault();
+  });
+
+  $(".drag-destination").on("mouseover", function () {
+    if (grabbedImage && shiftedImage) {
+      const dragImage = document.getElementById("drag-image");
+      dragImage.setAttribute("data-dest", this.id);
+    }
+  });
+
+  $(".drag-destination").on("mouseleave", function () {
+    if (grabbedImage && shiftedImage) {
+      const dragImage = document.getElementById("drag-image");
+      if (dragImage.getAttribute('data-dest') == this.id) dragImage.setAttribute("data-dest", "");
+    }
+  });
+
 });
 // ^ $(document).ready
 
@@ -648,49 +715,47 @@ function partnerDisplay() {
  * Refreshes card image events.
  */
 function refreshEvents() {
-  let cardImages = $(".card-image");
+  let cardImages = $(".card-image-wrap");
 
   cardImages.off();
 
-  cardImages.on("mousemove", (event) => {
+  cardImages.on("mousemove", function (event) {
     if (!mouseDown) {
       event.preventDefault();
-      let rect = event.target.getBoundingClientRect();
+      const cardContainer = $(this).parent(".card-container");
+      if (cardContainer.next().length == 0) return;
+      let rect = $(this)[0].getBoundingClientRect();
+      const nextRect = cardContainer.next().find(".card-image-wrap")[0].getBoundingClientRect();
       let y = event.clientY - rect.top;
-      if (
-        ($(event.target.parentNode).hasClass("singleton-view") ||
-        $(".display-column").hasClass("collapsed-view")
-          ? y >= 39
-          : y >= 80) &&
-        $(event.target).parent().next().length != 0
-      ) {
-        $(event.target).removeClass("card-image-hover");
+      if (y + rect.top > nextRect.top) {
+        $(this).removeClass("card-image-hover");
       }
     }
   });
 
-  cardImages.on("mouseenter", (event) => {
+  cardImages.on("mouseenter", function (event) {
     event.preventDefault();
     if (grabbedImage == null) {
-      $(event.target).addClass("card-image-hover");
+      this.classList.add("card-image-hover")
     }
   });
 
-  cardImages.on("mouseleave", (event) => {
+  cardImages.on("mouseleave", function (event) {
     event.preventDefault();
-    $(event.target).removeClass("card-image-hover");
+    $(this).removeClass("card-image-hover");
   });
 
-  cardImages.on("click", (event) => {
+  cardImages.on("click", function (event) {
     event.preventDefault();
-    if (shifftedImage) {
+    if (shiftedImage) {
       writeCardsLocalStorage();
       return;
     }
-    if (event.target.id == "drag-image") return;
-    let obj = $(event.target);
+    if (this.id == "drag-image") return;
+    let obj = $(this);
+    const cardContainer = obj.parent(".card-container");
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().attr("data-name"),
+      (item) => item.name == cardContainer.attr("data-name"),
     );
     $(".card-viewer-image").attr("src", card.image_uris.normal);
     $(".card-viewer-image").attr("alt", card.name);
@@ -700,19 +765,20 @@ function refreshEvents() {
     mouseDown = false;
   });
 
-  cardImages.on("contextmenu", (event) => {
+  cardImages.on("contextmenu", function (event) {
     event.preventDefault();
-    let rect = event.target.getBoundingClientRect();
+    let rect = this.getBoundingClientRect();
     let imageMenu = $("#image-menu");
     let commanderMenu = $("#commander-menu");
+    const cardContainer = $(this).parent(".card-container");
     commanderMenu.css("left", "-500px");
     commanderMenu.css("top", "-500px");
     imageMenu.css("left", event.offsetX + rect.left);
     imageMenu.css("top", event.offsetY + rect.top);
-    imageMenu.attr("data-name", $(event.target).parent().attr("data-name"));
+    imageMenu.attr("data-name", cardContainer.attr("data-name"));
     $("#display-modal-container").css("display", "block");
 
-    let card = findLoadedCard($(event.target).parent().attr("data-name"));
+    let card = findLoadedCard(cardContainer.attr("data-name"));
     if (card != null && card != undefined) {
       if (partnerDisplay() && 
         (currentFormat.name != "commander" && currentFormat.name != "brawl") ||
@@ -745,16 +811,45 @@ function refreshEvents() {
     event.preventDefault();
   });
 
-  cardImages.on("mousedown", (event) => {
-    shifftedImage = false;
+  function startDragging(event) {
+    event.stopPropagation();
+    shiftedImage = false;
     if (!mouseDown) {
       mouseDown = true;
       dragStartX = event.clientX;
       dragStartY = event.clientY;
-      grabbedImage = event.target;
+      grabbedImage = this.closest(".card-image-wrap");
+      $(grabbedImage).addClass("dragging-thumb");
       //$("#drag-image").attr("src", $(event.target).attr("src"));
     }
+  }
+
+  cardImages.on("mousedown", function (event) {
+    shiftedImage = false;
+    if (!mouseDown) {
+      mouseDown = true;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      //const cardContainer = $(this).parent(".card-container");
+      const dragImage = document.getElementById("drag-image");
+      const cardContainer = $(this).parent(".card-container");
+      const name = cardContainer.data('name');
+      $(dragImage).data("name", name);
+      const card = findLoadedCard(name);
+      if (card) {
+        grabbedImage = this;
+        //grabbedImage.classList.add("dragging");
+        
+        dragImage.setAttribute('src', (PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal));
+        if (this.closest("#display-flex")) dragImage.setAttribute('data-src', 'main');
+        else if (this.closest("#sideboard-section")) dragImage.setAttribute('data-src', 'sideboard');
+        else if (this.closest("#commander-info-container")) dragImage.setAttribute('data-src', 'commander');
+        else dragImage.setAttribute("data-src", "search");
+      }
+    }
   });
+
+  cardImages.find(".image-thumb-tool").on("mousedown", startDragging);
 }
 
 $(document).on("keydown", (event) => {
@@ -970,7 +1065,7 @@ function loadLocalStorage() {
       icon.addClass("bxs-hide");
     }
     if (view.add_remove != null && view.add_remove == true) {
-      $(".display-column").addClass("collapsed-view");
+      $("#display-flex").addClass("collapsed-view");
       let icon = $(".dropdown-view[data-value='collapsed-view']>i");
       icon.removeClass("bxs-show");
       icon.addClass("bxs-hide");
@@ -1141,7 +1236,7 @@ function getViewStorageJSON() {
   let json = {
     collapsed: $("#info-title").hasClass("hidden"),
     card_headers: $(".card-type-title").hasClass("hidden"),
-    add_remove: $(".display-column").hasClass("collapsed-view"),
+    add_remove: $("#display-flex").hasClass("collapsed-view"),
     columns: parseInt(
       $(
         "#columns-dropdown>.dropdown-side-content>.dropdown-radio.radio-selected",
@@ -1519,13 +1614,20 @@ function commanderContext(event) {
 function addCard(card, refresh = true) {
   let cardAdded =
     $(`<div class="card-container" data-count="${card.count}" data-name="${card.name}" data-scryfall="${card.uri}">
-  <div class="card-count-column">
-    <div class="card-count">&times;<span class="count-span">${card.count}</span></div>
-    <div class="card-count-add card-count-btn">&plus;</div>
-    <div class="card-count-remove card-count-btn">&minus;</div>
-  </div>
-  <img src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
-  </div>`);
+        <div class="card-count-column">
+          <div class="card-count">&times;<span class="count-span">${card.count}</span></div>
+          <div class="card-count-add card-count-btn">&plus;</div>
+          <div class="card-count-remove card-count-btn">&minus;</div>
+        </div>
+        <div class="card-image-wrap clearfix">
+          <img inert src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
+          <div class="card-image-toolbar">
+            <div class="icon-tool-wrapper image-thumb-tool"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-3x2-gap-fill" viewBox="0 0 16 16">
+  <path d="M1 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zM1 9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"></path>
+</svg></div>
+          </div>
+        </div>
+      </div>`);
   //cardAdded.data("count", 4);
   //$(cardContainer).append(cardAdded);
   if (card.type_line.includes("Creature")) {
@@ -1556,8 +1658,9 @@ function addCard(card, refresh = true) {
   ).on("click", (event) => {
     event.preventDefault();
     let obj = $(event.target);
+    const cardContainer = obj.parent(".card-container");
     let card = loadedCards.find(
-      (item) => item.name == obj.parent().parent().attr("data-name"),
+      (item) => item.name == cardContainer.attr("data-name"),
     );
     let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
     let cardMax = cardCountMax(card, false);
@@ -1566,7 +1669,7 @@ function addCard(card, refresh = true) {
       removeCard(card, true);
     } else if (updatedCount <= cardMax || cardMax == -1) {
       card.count = updatedCount;
-      obj.parent().find("span.count-span").html(updatedCount);
+      cardContainer.find("span.count-span").html(updatedCount);
     }
     refreshDeckCardCount();
   });
@@ -1585,11 +1688,18 @@ function addCard(card, refresh = true) {
 function addCardToSideboard(card) {
   let cardAdded =
     $(`<div class="card-container sideboard-card" data-count="${card.sideboard}" data-name="${card.name}" data-scryfall="${card.uri}">
-  <div class="card-count-column">
-    <div class="card-count">&times;<span class="count-span">${card.sideboard}</span></div>
-  </div>
-  <img src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
-  </div>`);
+        <div class="card-count-column">
+          <div class="card-count">&times;<span class="count-span">${card.sideboard}</span></div>
+        </div>
+        <div class="card-image-wrap clearfix">
+          <img inert src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
+          <div class="card-image-toolbar">
+            <div class="icon-tool-wrapper image-thumb-tool"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-3x2-gap-fill" viewBox="0 0 16 16">
+  <path d="M1 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zM1 9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"></path>
+</svg></div>
+          </div>
+        </div>
+    </div>`);
   $("#sideboard-display-container").append(cardAdded);
 
   refreshDeckFormat();
