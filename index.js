@@ -88,11 +88,13 @@ app.get("/search", async (req, res) => {
     console.log(apiUrl);
     let response = await fetch(apiUrl);
     let data = await response.json();
-    res.writeHead(response.status, "OK", response.headers);
-    res.json(data);
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(response.status, "OK", response.headers).end(JSON.stringify(data));
   }
   catch (err) {
-    res.status(500).json({error: "Error fetching from Scryfall API"});
+    console.log("Error fetching from Scryfall API: ", err);
+    res.setHeader("Content-Type", "application/json");
+    res.status(500).end("{error: 'Internal Server Error'}");
   }
 });
 
