@@ -19,6 +19,11 @@ let cardContainer = null;
 let searchBar = null;
 let scryfallBar = null;
 let commanderImages = null;
+let deckId = "";
+if (window.location.pathname.split("/").length >= 3) {
+  let parts = window.location.pathname.split("/");
+  deckId = parts[2];
+}
 let formats = [
   { name: "standard", singleton: false, size: 60 },
   { name: "modern", singleton: false, size: 60 },
@@ -50,7 +55,11 @@ let startX = 0;
 let startY = 0;
 let newX = 0;
 let newY = 0;
-let savePromise = null;
+
+let savingData = {
+  saving: false,
+  callback: null
+};
 
 let dragData = {
   grabbedImage: null, // image element
@@ -751,21 +760,29 @@ $(document).ready(async () => {
     if ((event.ctrlKey || event.metaKey)) {
       if (event.key === 's') {
         event.preventDefault(); // Prevent browser's save dialog
-        alert('Save shortcut triggered!');
+        saveDeck();
       }
       else if (event.key === 'z') {
-        alert('undo');
+        console.log('undo')
       }
       else if (event.key === 'y') {
-        alert('redo');
+        console.log('redo');
       }
       else if (event.shiftKey && event.key === 'Z') {
-        alert('redo');
+        console.log("redo");
       }
       else if (event.shiftKey && event.key === 'E') {
-        alert('export');
+        exportDeck();
       }
     }
+  });
+
+  $("#save-deck-dropdown").on("click", () => {
+    saveDeck();
+  });
+  
+  $("#export-deck-dropdown").on("click", () => {
+    exportDeck();
   });
 
   $("#sideboard-tab").on("click", (event) => {
@@ -1384,11 +1401,17 @@ function getCardStorageJSON() {
 }
 
 async function saveDeck() {
-  if (loadedCards.length == 0) {
-    alert("You cannot save an empty deck.");
+  if (savingData.saving) {
+    if (savingData.callback == null) savingData.callback = saveDeck;
     return;
   }
-  if (currentFormat == null || currentFormat == undefined) {
+
+  let saveCards = loadedCards.filter((card) => (card.count || card.sideboard) && card.id);
+
+  if (saveCards.length == 0) {
+    return;
+  }
+  if (!currentFormat) {
     alert("You must select a format before saving.");
     return;
   }
@@ -1396,52 +1419,78 @@ async function saveDeck() {
   let deck = {};
   deck.format = currentFormat.name;
   let nameinput = $("#deck-name-input").val().trim();
-  if (nameinput == null || nameinput == undefined || nameinput.length == 0) nameinput = "Untitled Deck";
+  if (!nameinput) nameinput = "Untitled Deck";
   deck.name = nameinput;
   deck.description =  $("#description-input").val().trim();
   deck.cards = [];
-  deck.sideboard = [];
+  deck._id = deckId;
 
-  loadedCards.forEach((card) => {
-    if (card.count != null && card.count > 0) {
-      let saveCard = {};
-      saveCard.scryfallId = card.id;
-      saveCard.count = card.count;
-      saveCard.commander = card.commander != null && card.commander != undefined ? card.commander : false;
-      if (card.sideboard != null) {
-        saveCard.count -= card.sideboard;
-        if (card.sideboard > 0) {
-          let sideCard = { ...saveCard };
-          sideCard.count = card.sideboard;
-          deck.sideboard.push(sideCard);
-        }
-      }
-      if (saveCard.count > 0) deck.cards.push(saveCard);
-    }
+  saveCards.forEach((card) => {
+    let addedCard = {};
+    addedCard.scryfallId = card.id;
+    addedCard.count = card.count || 0;
+    addedCard.sideboard = card.sideboard || 0;
+    if (card.commander) addedCard.commander = card.commander || false;
+    deck.cards.push(addedCard);
   });
 
-  if (savePromise != null) {
-    await savePromise;
-  }
-
-  savePromise = fetch("/savedeck", {
+  $("#save-msg").text("Saving deck...");
+  savingData.saving = true;
+  fetch("/savedeck", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(deck)
   }).then((response) => {
+    savingData.saving = false;
     if (!response.ok) {
       response.text().then((text) => {
         alert("There was an error saving your deck: " + text);
+        $("#save-msg").text("Unable to save deck");
       });
       return;
     }
     $("#save-msg").text("Deck Saved");
-    sav
+    
   }).catch(error => {
+    savingData.saving = false;
     alert("There was an error saving your deck: " + error.message);
-  })
+    $("#save-msg").text("Unable to save deck");
+  });
+}
+
+function exportDeck() {
+  let exportCards = loadedCards.filter((card) => (card.count || card.sideboard) && card.id);
+  let deck = {};
+  deck.format = currentFormat.name;
+  let nameinput = $("#deck-name-input").val().trim();
+  if (!nameinput) nameinput = "Untitled Deck";
+  deck.name = nameinput;
+  deck.description =  $("#description-input").val().trim();
+  deck.cards = [];
+
+  exportCards.forEach((card) => {
+    let addedCard = {};
+    addedCard.scryfallId = card.id;
+    addedCard.count = card.count || 0;
+    addedCard.sideboard = card.sideboard || 0;
+    if (card.commander) addedCard.commander = card.commander || false;
+    deck.cards.push(addedCard);
+  });
+
+  downloadFile(deck.name.replaceAll(" ", "_") + ".json", JSON.stringify(deck), "application/json");
+}
+
+function downloadFile(filename, text, type) {
+  // application/json
+  // text/plain
+  const blob = new Blob([text], { type: type });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 /**

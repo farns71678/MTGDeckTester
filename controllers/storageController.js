@@ -35,18 +35,21 @@ module.exports.createDeck = async (req, res) => {
 }
 
 module.exports.saveDeck = async (req, res) => {
-    const newDeck = { _id, cards, format, public, name, description, sideboard, backgroundUrl } = req.body;
+    const newDeck = { _id, cards, format, public, name, description, backgroundUrl } = req.body;
 
     try {
         const deck = await Deck.findOne({ _id: newDeck._id });
-        if (deck.owner == res.locals.user._id) {
+        if (deck.owner.toString() === res.locals.user._id.toString()) {
+            await presaveDeck(newDeck);
             Object.keys(newDeck).forEach(key => {
-                if (key != '_id' && newDeck[key] != null) deck[key] = newDeck[key];
+                if (key != '_id' && newDeck[key]) deck[key] = newDeck[key];
             });
-            await presaveDeck(deck);
             await deck.save();
         }
-        else res.status(401).send("You do not own this deck. ");
+        else {
+            res.status(401).end("You do not own this deck. ");
+            return;
+        }
         res.send("success");
     }
     catch (err) {
