@@ -125,7 +125,7 @@
         <!-- this is all test html-->
         <div id="card-display-container" class="drag-destination">
           <div id="display-flex">
-            <div id="display-column-0" class="display-column">
+            <!--<div id="display-column-0" class="display-column">-->
               <div id="commander-info-container" class="hidden clearfix drag-destination">
                 <div id="commander-flex">
                   <img src="https://cards.scryfall.io/normal/front/7/5/755cf134-e91e-4aa4-be44-b7a53a7f9e20.jpg?1743207218" alt="Commander" class="commander-display-image" data-name="Sidar Kondo of Jamuraa" data-order="0">
@@ -147,9 +147,9 @@
               >
                 <h1 class="card-type-title">PLANESWALKERS</h1>
               </div>
-            </div>
+            <!--</div>-->
 
-            <div id="display-column-1" class="display-column">
+            <!--<div id="display-column-1" class="display-column">-->
               <div
                 id="artifact-display-container"
                 class="card-type-container hidden clearfix"
@@ -170,9 +170,9 @@
               >
                 <h1 class="card-type-title">INSTANTS</h1>
               </div>
-            </div>
+            <!--</div>-->
 
-            <div id="display-column-2" class="display-column">
+            <!--<div id="display-column-2" class="display-column">-->
               <div
                 id="sorcery-display-container"
                 class="card-type-container hidden clearfix"
@@ -186,11 +186,11 @@
               >
                 <h1 class="card-type-title">LANDS</h1>
               </div>
-            </div>
+            <!--</div>-->
 
-            <div id="display-column-3" class="display-column hidden"></div>
+            <!--<div id="display-column-3" class="display-column hidden"></div>
             <div id="display-column-4" class="display-column hidden"></div>
-            <div id="display-column-5" class="display-column hidden"></div>
+            <div id="display-column-5" class="display-column hidden"></div>-->
           </div>
           
         </div>
@@ -211,8 +211,15 @@
         <!--right click image menu-->
         <div id="display-modal-container">
           <div id="image-menu" class="context-menu">
-            <div id="image-menu-plus" class="image-menu-item context-menu-item">Add One</div>
-            <div id="image-menu-minus" class="image-menu-item context-menu-item">Remove One</div>
+            <div id="image-menu-count-row"  class="image-menu-item">
+              <input type="number" id="image-menu-count-input" value="4" min="0" />
+              <div id="image-menu-plus" class="image-menu-count-btn">
+                <i class="bx bx-plus"></i>
+              </div>
+              <div id="image-menu-minus" class="image-menu-count-btn">
+                <i class="bx bx-minus"></i>
+              </div>
+            </div>
             <div id="image-menu-remove" class="image-menu-item context-menu-item">
               Remove From Deck
             </div>

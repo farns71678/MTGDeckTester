@@ -76,10 +76,12 @@ deckSchema.pre('save', async function (next) {
 
 // fetch card data
 async function fetchCardData(id) {
-    return await fetch(scryfallUrl + id)
+    return fetch(scryfallUrl + id)
         .then((res) => { 
             if (res.ok) return res.json();
-            else return Promise.regect(res);
+            else {
+                throw new Error("Error fetching card data for " + id + ": ", error);
+            }
         })
         .catch((error) => { 
             console.log("Error fetching card data for " + id + ": ", error);
@@ -101,11 +103,12 @@ async function presaveDeck(deck) {
     let cardData = new Array(deck.cards.length);
     for (let i = 0; i < deck.cards.length; i++) {
         let data = cardCache.get(deck.cards[i].scryfallId);
-        if (data == undefined || data == null || data.object != "card") {
+        if (!data || data.object != "card") {
             cardData[i] = fetchCardData(deck.cards[i].scryfallId);
         }
+        else cardData[i] = data;
     }
-    await Promise.allSettled(cardData).then((results) => { cardData = results.map(result => result.value); });
+    await Promise.all(cardData).then((results) => { cardData = results.map(result => result); });
 
     for (let i = 0; i < deck.cards.length; i++) {
         if (cardData[i].object == "card") {

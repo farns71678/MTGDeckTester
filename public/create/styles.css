@@ -557,6 +557,8 @@ h2 {
   position: relative;
   overflow: auto;
   height: 100%;
+  container-type: inline-size; /* Enables container queries */
+  container-name: display-section-container;
 }
 
 #display-modal-container {
@@ -604,6 +606,48 @@ h2 {
   background-color: #222;
 }
 
+#image-menu-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5px 8px 5px 7px;
+}
+
+#image-menu-count-row .image-menu-count-btn {
+  flex-grow: 0;
+  padding: 3px;
+  margin: 0 1px;
+  display: flex;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+#image-menu-count-row .image-menu-count-btn:hover {
+  background-color: rgba(200, 200, 200, 0.15);
+}
+
+#image-menu-count-input {
+  flex-grow: 1;
+  -moz-appearance: textfield; /* Firefox */
+  -webkit-appearance: none; /* Chrome, Safari, Edge */
+  appearance: none; /* Standard */
+  color: #e2e2e2;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  flex-shrink: 1;
+  width: 20px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+#image-menu-count-input::-webkit-outer-spin-button,
+#image-menu-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
 #drag-image {
   position: absolute;
   z-index: 3;
@@ -618,7 +662,10 @@ h2 {
 }
 
 #display-flex {
-  display: flex;
+  /* display: flex; */
+  column-count: 6;
+  column-fill: balance;
+  height: fit-content;
 }
 
 .display-column:not(.hidden) {
@@ -644,6 +691,7 @@ h2 {
   flex-direction: column;
   align-items: end;
   margin-bottom: 16px;
+  page-break-inside: avoid;
 }
 
 .card-type-title {
@@ -812,8 +860,11 @@ textarea {
 
 .card-image-wrap.dragging-thumb {
   cursor: -webkit-grabbing;
-  cursor: grab;
+  cursor: -moz-grabbing;
+  cursor: grabbing;
 }
+
+
 
 .card-image-toolbar {
   position: absolute;
@@ -834,12 +885,20 @@ textarea {
   padding: 1px 3px;
   transition: background-color 0.2s ease;
   display: flex;
-  cursor: grab;
+  cursor: pointer;
+  margin: 0 2px;
 }
 
 .icon-tool-wrapper:hover {
   background-color: #88aae5b8;
 }
+
+.image-thumb-tool {
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: grab;
+}
+
 
 .card-image {
   width: 231px;
@@ -1267,6 +1326,24 @@ textarea {
 
 .visible {
   display: block;
+}
+
+@container (max-width: 1500px) {
+  #display-flex {
+    column-count: 5;
+  }
+}
+
+@container (max-width: 1300px) {
+  #display-flex {
+    column-count: 4;
+  }
+}
+
+@container (max-width: 800px) {
+  #display-flex {
+    column-count: 3;
+  }
 }
 
 @media only screen and (max-width: 1200px) {

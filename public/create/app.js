@@ -342,21 +342,17 @@ $(document).ready(async () => {
     toggleInfoSection();
   });
 
-  $(".card-count-btn").on("click", (event) => {
+  $(".card-count-btn").on("click", function (event) {
     event.preventDefault();
-    let obj = $(event.target);
-    const cardContainer = obj.parent(".card-container.board-card");
-    let card = loadedCards.find(
-      (item) => item.name == cardContainer.attr("data-name"),
-    );
-    let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
-    card.count = updatedCount;
-    if (updatedCount <= 0) {
-      removeCard(card, true);
-    } else {
-      cardContainer.find("span.count-span").html(updatedCount);
+    const cardContainer = this.closest(".card-container");
+    const name = $(cardContainer).attr("data-name");
+    const sideboard = cardContainer.classList.contains("sideboard-card")
+    if (this.classList.contains("card-count-add")) {
+      addOne(name, sideboard);
     }
-    refreshDeckCardCount();
+    else {
+      removeOne(name, sideboard);
+    }
   });
 
   $(".card-viewer-close-btn").on("click", (event) => {
@@ -396,22 +392,46 @@ $(document).ready(async () => {
     if (modal.css("display") != "none") modal.css("display", "none");
   });
 
+  $("#image-menu-count-input").on("keydown", function (event) {
+    if (event.key == "Enter") {
+      let card = findLoadedCard($("#image-menu").attr("data-name"));
+      const sideboard = $("#image-menu").attr("data-sideboard") == 'true';
+      const ogCount = sideboard ? card.sideboard : card.count;
+      if (!card) return;
+      let value = parseInt($(this).val());
+      if (isNaN(value) || value < 0) {
+        $(this).val(ogCount);
+        return;
+      }
+      let max = cardCountMax(card);
+      if (value > max && max != -1) $(this).val(ogCount);
+      else {
+        updateCardCount(card.name, value, sideboard);
+      }
+      $("#image-menu").click();
+    }
+  });
+
   $("#image-menu-plus").on("click", (event) => {
     event.preventDefault();
     let cardName = $("#image-menu").attr("data-name");
-    let plusBtn = $(
-      `.card-container.board-card[data-name="${cardName}"]>.card-count-column>.card-count-add`,
-    );
-    plusBtn.click();
+    const sideboard = $("#image-menu").attr("data-sideboard") == 'true';
+    const cardContainer = $(`.card-container.${sideboard ? "sideboard-card" : "board-card"}[data-name="${cardName}"]`);
+    if (cardContainer) {
+      addOne(cardName, sideboard);
+    }
   });
 
   $("#image-menu-minus").on("click", (event) => {
     event.preventDefault();
     let cardName = $("#image-menu").attr("data-name");
-    let minusBtn = $(
-      `.card-container.board-card[data-name="${cardName}"]>.card-count-column>.card-count-remove`,
-    );
-    minusBtn.click();
+    const sideboard = $("#image-menu").attr("data-sideboard") == 'true';
+    const cardContainer = $(`.card-container.${sideboard ? "sideboard-card" : "board-card"}[data-name="${cardName}"]`);
+    if (cardContainer) {
+      let count = removeOne(cardName, sideboard);
+      if (count <= 0) 
+        $("#image-menu").click();
+    }
   });
 
   $("#image-menu-remove").on("click", (event) => {
@@ -601,7 +621,6 @@ $(document).ready(async () => {
           cardContainer.remove();
           refreshDeckCardCount();
         }
-        // here
         else if (src == "search") {
           if (card.sideboard == 0) {
             let cardAdd = cardCountMax(card, false);
@@ -809,6 +828,10 @@ $(document).ready(async () => {
     }
   });
 
+  $("#image-menu-count-row").on("click", (event) => {
+    event.stopPropagation();
+  });
+
 });
 // ^ $(document).ready
 
@@ -826,6 +849,7 @@ function partnerDisplay() {
  */
 function refreshEvents() {
   let cardImages = $(".card-image-wrap");
+
 
   cardImages.off();
 
@@ -886,10 +910,12 @@ function refreshEvents() {
     imageMenu.css("left", event.offsetX + rect.left);
     imageMenu.css("top", event.offsetY + rect.top);
     imageMenu.attr("data-name", cardContainer.attr("data-name"));
+    const sideboard = cardContainer.hasClass("sideboard-card");
+    imageMenu.attr("data-sideboard", sideboard);
     $("#display-modal-container").css("display", "block");
 
     let card = findLoadedCard(cardContainer.attr("data-name"));
-    if (card != null && card != undefined) {
+    if (card) {
       if (partnerDisplay() && 
         (currentFormat.name != "commander" && currentFormat.name != "brawl") ||
         !(
@@ -913,6 +939,8 @@ function refreshEvents() {
       else {
         $("#image-menu-partner").removeClass("disabled");
       }
+
+      imageMenu.find("#image-menu-count-input").val(sideboard ? card.sideboard : card.count);
     }
   });
 
@@ -958,7 +986,34 @@ function refreshEvents() {
     }
   });
 
+  $(".image-thumb-tool").off();
+  $(".icon-tool-wrapper").off();
+
   cardImages.find(".image-thumb-tool").on("mousedown", startDragging);
+
+  cardImages.find(".image-minus-tool").on("click", function (event) {
+    event.preventDefault();
+    const cardContainer = this.closest(".card-container");
+    removeOne($(cardContainer).attr("data-name"), cardContainer.classList.contains("sideboard-card"));
+  });
+  
+  cardImages.find(".image-plus-tool").on("click", function (event) {
+    event.preventDefault();
+    const cardContainer = this.closest(".card-container");
+    addOne($(cardContainer).attr("data-name"), cardContainer.classList.contains("sideboard-card"));
+  });
+
+  cardImages.find(".icon-tool-wrapper").on("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  cardImages.find(".icon-tool-wrapper").on("contextMenu", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  
 }
 
 $(document).on("keydown", (event) => {
@@ -1210,110 +1265,6 @@ function loadLocalStorage() {
     if (info.description != null && info.description != undefined)
       $("#description-input").val(info.description);
   }
-  /*
-  if (cards == null || cards == undefined) {
-    loadedCards = [];
-    $.ajax({
-      url: "../create/storage.json",
-      type: "GET",
-      success: (res) => {
-        loadedCards = res.list;
-        writeCardsLocalStorage();
-        loadedCards.forEach((card) => {
-          if (card.commander) {
-            if ($("#commander-info-container").hasClass("hidden")) {
-              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
-              $(commanderImages).attr("data-name", loadedCards[i].name);
-              $("#commander-info-container").removeClass("hidden");
-            }
-            else {
-              let partner = $(".commander-display-image:nth-child(2)");
-              $(partner).attr("src", loadedCards[i].image_uris.normal);
-              $(partner).attr("data-name", loadedCards[i].name);
-              partner.removeClass('hidden');
-            }
-          }
-          else {
-            addCard(card, false);
-          }
-        });
-        refreshDeckFormat();
-        refreshSections();
-        refreshDeckColors();
-        refreshEvents();
-      },
-      error: (xhr) => {
-        alert("There was an error with your request (" +
-            xhr.status +
-            "): " +
-            xhr.responseText);
-      }
-    });
-  }
-  else {
-    //copyToClipboard(cards);
-    loadedCards = JSON.parse(cards).list;
-    console.log(loadedCards);
-    for (let i = 0; i < loadedCards.length; i++) {
-      $.ajax({
-        url: PROXY_ON ? pathToSelf(loadedCards[i].uri) : loadedCards[i].uri,
-        type: "GET",
-        success: function (res) {
-          loadedCards[i] = { ...loadedCards[i], ...res };
-          if (
-            (currentFormat.name == "commander" ||
-              currentFormat.name == "brawler") &&
-            loadedCards[i].commander != null &&
-            loadedCards[i].commander != undefined &&
-            loadedCards[i].commander
-          ) {
-            if ($("#commander-info-container").hasClass("hidden")) {
-              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
-              $(commanderImages).attr("data-name", loadedCards[i].name);
-              $("#commander-info-container").removeClass("hidden");
-            }
-            else {
-              let partner = $(".commander-display-image:nth-child(2)");
-              $(partner).attr("src", loadedCards[i].image_uris.normal);
-              $(partner).attr("data-name", loadedCards[i].name);
-              partner.removeClass('hidden');
-            }
-          } else {
-            console.log(loadedCards[i].name);
-            addCard(loadedCards[i], false);
-          }
-          refreshDeckColors();
-          refreshSections();
-        },
-        error: function (err) {
-          console.log(err);
-          if (
-            (currentFormat.name == "commander" ||
-              currentFormat.name == "brawler") &&
-            loadedCards[i].commander != null &&
-            loadedCards[i].commander != undefined &&
-            loadedCards[i].commander
-          ) {
-            if ($("#commander-info-container").hasClass("hidden")) {
-              $(commanderImages).attr("src", loadedCards[i].image_uris.normal);
-              $(commanderImages).attr("data-name", loadedCards[i].name);
-              $("#commander-info-container").removeClass("hidden");
-            }
-            else {
-              let partner = $(".commander-display-image:nth-child(2)");
-              $(partner).attr("src", loadedCards[i].image_uris.normal);
-              $(partner).attr("data-name", loadedCards[i].name);
-            }
-          } else {
-            addCard(loadedCards[i], false);
-          }
-          refreshDeckColors();
-          refreshSections();
-        }
-      });
-    }
-  }
-    */
 }
 
 // loadDeck
@@ -1608,6 +1559,7 @@ function refreshDeckFormat() {
 }
 
 function refreshSections() {
+  return; // disabled for now
   let heights = [];
   let actualHeightLength = 0;
   $(".display-column>*").each((i, obj) => {
@@ -1747,6 +1699,68 @@ function commanderContext(event) {
   $("#display-modal-container").css("display", "block");
 }
 
+function updateCardCount(name, count, sideboard = false) {
+  let card = findLoadedCard(name);
+  if (!card) return 0;
+  if (sideboard) {
+    card.sideboard = count;
+    if (card.sideboard == 0) {
+      $(`#sideboard-section .card-container[data-name="${card.name.replaceAll('"', '\\"')}"]`).remove();
+      return 0;
+    }
+    $(`#sideboard-section .card-container[data-name="${card.name.replaceAll('"', '\\"')}"]`).each((i, obj) => {
+      let countSpan = $(obj).find(".count-span");
+      countSpan.text(card.sideboard);
+      $(obj).attr("data-count", card.sideboard);
+    });
+  }
+  else {
+    card.count = count;
+    if (card.count == 0) {
+      let obj = $(`#card-display-container .card-container[data-name="${card.name.replaceAll('"', '\\"')}"]`)
+      obj.remove();
+      let group = obj.parent(".card-type-container");
+      if (group.find(".card-container").length == 0) group.addClass("hidden");
+      return 0;
+    }
+    $(`#card-display-container .card-container[data-name="${card.name.replaceAll('"', '\\"')}"]`).each((i, obj) => {
+      let countSpan = $(obj).find(".count-span");
+      countSpan.text(card.count);
+      $(obj).attr("data-count", card.count);
+    });
+  }
+  refreshDeckCardCount();
+  refreshDeckColors();
+  return sideboard ? card.sideboard : card.count;
+}
+
+function addOne(name, sideboard = false) {
+  let card = findLoadedCard(name);
+  if (!card) return;
+  if (sideboard) {
+    updateCardCount(name, card.sideboard + 1, true);
+  }
+  else if (cardCountMax(card) == -1 || card.count < cardCountMax(card)) {
+    updateCardCount(name, card.count + 1);
+  }
+}
+
+// returns new card count;
+function removeOne(name, sideboard = false) {
+  let card = findLoadedCard(name);
+  if (!card) return 0;
+  if (sideboard) {
+    if (card.sideboard == 0) return 0;
+    updateCardCount(name, card.sideboard - 1, true);
+    return card.sideboard;
+  }
+  else {
+    if (card.count == 0) return 0;
+    updateCardCount(name, card.count - 1);
+    return card.count;
+  }
+}
+
 /**
  * Adds a card to the deck display.
  * Refreshes events and deck format, but not sections. Call <code>refreshSections()</code> after.
@@ -1763,8 +1777,14 @@ function addCard(card, refresh = true) {
         <div class="card-image-wrap clearfix">
           <img inert src="${(PROXY_ON ? pathToSelf(card.image_uris.normal) : card.image_uris.normal)}" class="card-image">
           <div class="card-image-toolbar">
+          <div class="icon-tool-wrapper image-minus-tool"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash" viewBox="0 0 16 16">
+  <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+</svg></div>
             <div class="icon-tool-wrapper image-thumb-tool"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-3x2-gap-fill" viewBox="0 0 16 16">
   <path d="M1 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zM1 9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"></path>
+</svg></div>
+            <div class="icon-tool-wrapper image-plus-tool"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
 </svg></div>
           </div>
         </div>
@@ -1795,24 +1815,18 @@ function addCard(card, refresh = true) {
   }
 
   $(
-    `.card-container.board-card[data-name="${card.name}"]>.card-count-column>.card-count-btn`,
-  ).on("click", (event) => {
+    `.card-container.board-card[data-name="${card.name}"] .card-count-btn`,
+  ).on("click", function (event) {
     event.preventDefault();
-    let obj = $(event.target);
-    const cardContainer = obj.parent(".card-container");
-    let card = loadedCards.find(
-      (item) => item.name == cardContainer.attr("data-name"),
-    );
-    let updatedCount = (event.target.innerHTML == "+" ? 1 : -1) + card.count;
-    let cardMax = cardCountMax(card, false);
-    if (updatedCount <= 0) {
-      card.count = 0;
-      removeCard(card, true);
-    } else if (updatedCount <= cardMax || cardMax == -1) {
-      card.count = updatedCount;
-      cardContainer.find("span.count-span").html(updatedCount);
+    const cardContainer = this.closest(".card-container");
+    const name = $(cardContainer).attr("data-name");
+    const sideboard = cardContainer.classList.contains("sideboard-card")
+    if (this.classList.contains("card-count-add")) {
+      addOne(name, sideboard);
     }
-    refreshDeckCardCount();
+    else {
+      removeOne(name, sideboard);
+    }
   });
 
   refreshDeckFormat();
@@ -1855,8 +1869,8 @@ function addCardToSideboard(card) {
 function removeCard(card, refresh = false) {
   card.count = 0;
   let cardObj = $(`.card-container.board-card[data-name="${card.name}"]`);
-  if (cardObj.parent().children().length == 2) {
-    cardObj.parent().addClass("hidden");
+  if (cardObj.parent(".card-type-container").find(".card-container").length == 0) {
+    cardObj.parent(".card-type-container").addClass("hidden");
   }
   cardObj.remove();
   writeCardsLocalStorage();
