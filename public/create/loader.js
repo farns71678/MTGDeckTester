@@ -17,6 +17,11 @@ async function loadDeck() {
     const username = paths[1];
     const deckId = paths[2];
 
+    if (username == "create") {
+      documentLoaded();
+      return;
+    }
+
     const response = await fetch("/deckinfo?_id=" + deckId + (PROXY_ON ? "&retreiveData=true" : "&retreiveData=false"));
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${await response.message}`);

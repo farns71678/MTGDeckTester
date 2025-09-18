@@ -49,6 +49,9 @@ body {
 }
 
 #create-btn {
+  display: block;
+  text-decoration: none;
+  color: #e2e2e2;
   background-color: rgb(10, 149, 10);
   font-size: 18pt;
   padding: 6px 8px;

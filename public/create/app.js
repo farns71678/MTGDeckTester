@@ -1360,6 +1360,7 @@ async function saveDeck() {
   let saveCards = loadedCards.filter((card) => (card.count || card.sideboard) && card.id);
 
   if (saveCards.length == 0) {
+    $("#save-msg").text("No cards to save");
     return;
   }
   if (!currentFormat) {
@@ -1385,30 +1386,62 @@ async function saveDeck() {
     deck.cards.push(addedCard);
   });
 
-  $("#save-msg").text("Saving deck...");
-  savingData.saving = true;
-  fetch("/savedeck", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(deck)
-  }).then((response) => {
-    savingData.saving = false;
-    if (!response.ok) {
-      response.text().then((text) => {
-        alert("There was an error saving your deck: " + text);
+
+  if (deck._id) {
+    $("#save-msg").text("Saving deck...");
+    savingData.saving = true;
+    fetch("/savedeck", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(deck)
+    }).then((response) => {
+      savingData.saving = false;
+      if (!response.ok) {
+        response.text().then((text) => {
+          alert("There was an error saving your deck: " + text);
+          $("#save-msg").text("Unable to save deck");
+        });
+        return;
+      }
+      $("#save-msg").text("Deck Saved");
+      
+    }).catch(error => {
+      savingData.saving = false;
+      alert("There was an error saving your deck: " + error.message);
+      $("#save-msg").text("Unable to save deck");
+    });
+  }
+  else {
+    // create a new deck
+    $("#save-msg").text("Creating deck...");
+    savingData.saving = true;
+    fetch("/createdeck", {
+      method: "POST",
+      headers: {"Content-Type": "application/json" },
+      body: JSON.stringify(deck)
+    }).then((response) => {
+      savingData.saving = false;
+      if (!response.ok) {
+          alert("There was an error saving your deck: " + text);
         $("#save-msg").text("Unable to save deck");
+        return;
+      }
+      response.json().then((data) => {
+        deckId = data.deck._id;
+        window.history.replaceState({}, '', `/${data.username}/${data.deck._id}`);
+        $("#save-msg").text("Deck Saved");
+      }).catch(error => {
+        alert("There was an error creating your deck: " + error.message);
+        $("#save-msg").text("Unable to create deck");
       });
-      return;
-    }
-    $("#save-msg").text("Deck Saved");
-    
-  }).catch(error => {
-    savingData.saving = false;
-    alert("There was an error saving your deck: " + error.message);
-    $("#save-msg").text("Unable to save deck");
-  });
+    }).catch(error => {
+      savingData.saving = false;
+      alert("There was an error creating your deck: " + error.message);
+      $("#save-msg").text("Unable to create deck");
+    });
+  }
 }
 
 function exportDeck() {

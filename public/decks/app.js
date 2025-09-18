@@ -11,7 +11,20 @@ const formats = [
     { name: "penny", singleton: false, size: 60 },
 ];
 
+let createModal;
+
 $(document).ready(() => {
+    createModal = new bootstrap.Modal(document.getElementById('create-deck-dialog'), {
+        keyboard: false
+    });
+
+    const formatSelect = document.getElementById("new-deck-format");
+    formats.forEach((format) => {
+        const option = document.createElement("option");
+        option.value = format.name;
+        option.text = format.name.charAt(0).toUpperCase() + format.name.slice(1);
+        formatSelect.appendChild(option);
+    });
 
     $("#create-from-load").on("click", (event) => {
         event.preventDefault();
@@ -138,6 +151,11 @@ $(document).ready(() => {
                 this.classList.add("bi-clipboard-x");
         }
     });
+
+    $("#create-btn").on("click", (event) => {
+        /*event.preventDefault();
+        createDeckDialog();*/
+    });
 });
 
 function displayError(msg) {
@@ -181,6 +199,10 @@ function shareDeck(deck) {
     copy.classList.remove("bi-clipboard-check");
     copy.classList.add("bi-clipboard");
     dialog.querySelector("#share-link").innerHTML = link;
+}
+
+function createDeckDialog() {
+    createModal.show();
 }
 
 const getDeckHTML = (deck, username) => {

@@ -23,7 +23,8 @@ module.exports.createDeck = async (req, res) => {
         let user = res.locals.user;
         deck.owner = user._id;
         await presaveDeck(deck);
-        let doc = (await Deck.create(deck)).toObject();
+        let doc = await Deck.create(deck);
+        console.log(doc);
         doc.count = getDeckCardTotal(doc);
         await user.updateOne({ $push: { decks: doc._id } });
         res.send(JSON.stringify({ deck: doc, username: user.username}));

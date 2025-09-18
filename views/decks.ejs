@@ -23,7 +23,7 @@
 
     <div id="main-container">
       <div id="tools-column">
-        <div id="create-btn">Create <i class="bx bx-plus"></i></div>
+        <a id="create-btn" href="/create">Create <i class="bx bx-plus"></i></a>
         <div class="tool-column-item current-page">
           <i class="bx bx-list-ul"></i> My Decks
         </div>
@@ -136,6 +136,37 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--create deck dialog-->
+    <div id="create-deck-dialog" class="modal fade" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Create Deck</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3 row">
+              <label for="new-deck-name" class="col-sm-2 col-form-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="new-deck-name">
+              </div>
+            </div>
+
+            <div class="mb-3 row">
+              <label for="new-deck-format" class="col-sm-2 col-form-label">Format</label>
+              <div class="col-sm-10">
+                <select id="new-deck-format" class="form-control"></select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="create-deck-cancel-btn" class="cancel-btn btn btn-outline-secondary modal-close-btn" data-bs-dismiss="modal">Close</button>
+            <button type="button" id="create-deck-btn" class="btn btn-outline-primary">Create Deck</button>
           </div>
         </div>
       </div>
